@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>TEREA Dark Red — prototypy</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#120609;color:#F2E9EA;overflow:hidden;
+  font:16px/1.4 -apple-system,"Helvetica Neue",Arial,sans-serif;
+  touch-action:none;overscroll-behavior:none;user-select:none;
+  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#app{position:fixed;inset:0}
+.scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+  justify-content:center;padding:0}
+.scr.on{display:flex}
+
+/* ── spoločná hlavička ── */
+.hdr{position:absolute;top:0;left:0;right:0;height:56px;display:flex;align-items:center;
+  justify-content:space-between;padding:0 28px;font-size:13px;letter-spacing:.22em;z-index:5}
+.hdr .brand .t{color:#F2E9EA}
+.hdr .brand .d{color:#FFB627;margin-left:10px;font-weight:600}
+.hdr .st{color:#F2E9EA;font-size:12px;letter-spacing:.24em}
+.dots{display:flex;gap:7px;justify-content:center;margin-top:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:#4A2028}
+.dot.on{background:#FFB627}
+
+.back{position:absolute;left:22px;bottom:18px;font-size:11px;letter-spacing:.18em;
+  color:#6B5459;padding:12px 4px;z-index:10}
+.msg{position:absolute;bottom:58px;left:0;right:0;text-align:center;font-size:13px;
+  letter-spacing:.1em;color:#A08A8E}
+.msg .amber{color:#FFB627}.msg .scarlet{color:#E0434A}
+.sub{color:#6B5459;font-size:12px;letter-spacing:.12em;text-align:center}
+
+/* ── menu ── */
+#s-menu{gap:0}
+#s-menu h1{font-size:clamp(26px,5vw,46px);letter-spacing:.04em;font-weight:800;
+  color:#F2E9EA;margin-bottom:6px}
+#s-menu .cl{color:#FFB627;letter-spacing:.3em;font-size:12px;margin-bottom:34px}
+.menu{display:grid;gap:11px;width:min(430px,86vw)}
+.btn{min-height:58px;padding:0 22px;border:1px solid #4A2028;border-radius:3px;
+  letter-spacing:.14em;font-size:13px;text-transform:uppercase;background:#1C0A0F;
+  color:#F2E9EA;text-align:left;display:flex;align-items:center;font-family:inherit}
+.btn:active{background:#2A0E15}
+.btn.tool{border-color:#2E1218;color:#7E6469;margin-top:12px;font-size:11px}
+
+/* ── 1 SPOT ── */
+#grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.8vw,22px);
+  width:min(820px,88vw)}
+.card{aspect-ratio:16/11;border-radius:4px;overflow:hidden;position:relative;display:block}
+.card svg{width:100%;height:100%;display:block}
+.card.dim{opacity:.13}
+.card.win{outline:2px solid #FFB627;outline-offset:4px}
+#memo{width:min(330px,62vw);aspect-ratio:16/11;border-radius:5px;overflow:hidden}
+#memo svg{width:100%;height:100%;display:block}
+#tbar{width:min(820px,88vw);height:2px;background:#33161C;margin-bottom:22px;position:relative}
+#tbar i{position:absolute;left:0;top:0;bottom:0;background:#FFB627;width:100%}
+
+/* ── 2 PUSH ── */
+#push{display:flex;align-items:center;gap:clamp(30px,7vw,90px)}
+#meterWrap{display:flex;align-items:stretch;gap:14px;height:58vh}
+.scale{position:relative;width:40px;font-size:11px;color:#6B5459;letter-spacing:.08em}
+.scale span{position:absolute;right:0;transform:translateY(50%);font-variant-numeric:tabular-nums}
+.scale span.hi{color:#FFB627}
+#track{position:relative;width:78px;border:1px solid #3A1620;background:#180A0F;overflow:hidden}
+#burn{position:absolute;left:0;right:0;top:0;
+  background:repeating-linear-gradient(0deg,#25090F 0 5px,#160609 5px 10px)}
+#band{position:absolute;left:-1px;right:-1px;border-top:1px solid #FFB627;
+  border-bottom:1px solid #FFB627;background:rgba(255,182,39,.10)}
+#ceil{position:absolute;left:-8px;right:-8px;height:1px;background:#F2E9EA}
+#fill{position:absolute;left:0;right:0;bottom:0;height:0}
+#burnLbl{position:absolute;color:#8A6B52;font-size:11px;letter-spacing:.2em;left:76px}
+#bandLbl{position:absolute;color:#FFB627;font-size:12px;letter-spacing:.14em;left:76px;
+  font-variant-numeric:tabular-nums}
+#val{font-size:clamp(54px,11vw,104px);font-weight:300;line-height:1;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+#val small{font-size:.3em;color:#FFB627;margin-left:6px;letter-spacing:0}
+#hold{position:absolute;right:9vw;bottom:14vh;text-align:center}
+#holdBtn{width:58px;height:58px;border-radius:50%;background:#2A1218;border:1px solid #4A2028;
+  margin:0 auto 10px}
+#hold .l{font-size:11px;letter-spacing:.24em;color:#8A7276}
+
+/* ── 3 MEMORIZE ── */
+#pads{position:relative;width:min(680px,90vw);height:min(440px,56vh)}
+.pad{position:absolute;left:50%;bottom:6%;transform-origin:50% 100%}
+.pad path{fill:#220E13;stroke:#331419;stroke-width:1}
+.pad.lit path{fill:#FF5A18;stroke:#FFB627}
+#glow{position:absolute;left:50%;bottom:-6%;width:78%;height:100%;transform:translateX(-50%);
+  background:radial-gradient(ellipse at 50% 70%,rgba(255,106,31,.22),transparent 62%);
+  opacity:0;pointer-events:none}
+#glow.on{opacity:1}
+
+/* ── 4 DRAW ── */
+#trcv{width:min(62vh,88vw);height:min(62vh,88vw);touch-action:none}
+#diag{position:absolute;right:20px;bottom:18px;font:11px/1.55 "SF Mono",Menlo,monospace;
+  color:#6B5459;text-align:right;white-space:pre}
+
+/* ── 5 RELEASE ── */
+#tcv{width:min(880px,92vw);height:min(58vh,540px);touch-action:none}
+#pw{position:absolute;left:30px;bottom:96px;width:120px}
+#pw .l{font-size:10px;letter-spacing:.24em;color:#6B5459;margin-bottom:6px}
+#pw .b{height:2px;background:#33161C;position:relative}
+#pw .b i{position:absolute;left:0;top:0;bottom:0;background:#FFB627;width:0}
+</style></head>
+<body><div id="app">
+
+<div class="scr on" id="s-menu">
+  <h1>TEREA DARK RED</h1>
+  <div class="cl">RETAIL ENGAGEMENT GAMES</div>
+  <div class="menu">
+    <button class="btn" data-go="s-spot">1 · SPOT THE INTENSITY</button>
+    <button class="btn" data-go="s-push">2 · PUSH THE INTENSITY</button>
+    <button class="btn" data-go="s-mem">3 · MEMORIZE INTENSITY</button>
+    <button class="btn" data-go="s-draw">4 · DRAW THE INTENSITY</button>
+    <button class="btn" data-go="s-rel">5 · RELEASE THE INTENSITY</button>
+    <button class="btn tool" data-go="s-lat">NÁSTROJ · meranie latencie a fps</button>
+  </div>
+</div>
+
+<div class="scr" id="s-spot">
+  <div class="hdr"><div class="brand"><span class="t">T E R E A</span><span class="d">DARK RED</span></div>
+    <div class="st" id="st-spot">KOLO 1 / 3</div></div>
+  <div class="back" data-go="s-menu">← SPÄŤ</div>
+  <div id="tbar"><i></i></div>
+  <div id="memo"></div>
+  <div id="grid" style="display:none"></div>
+  <div class="msg" id="m-spot">Zapamätaj si ju.</div>
+</div>
+
+<div class="scr" id="s-push">
+  <div class="hdr"><div class="brand"><span class="t">T E R E A</span><span class="d">DARK RED</span></div></div>
+  <div class="back" data-go="s-menu">← SPÄŤ</div>
+  <div id="push">
+    <div id="meterWrap">
+      <div class="scale" id="sc"></div>
+      <div id="track"><div id="burn"></div><div id="band"></div><div id="ceil"></div><div id="fill"></div></div>
+      <div style="position:relative;width:120px">
+        <div id="burnLbl">SPÁLENÉ</div><div id="bandLbl">110</div>
+      </div>
+    </div>
+    <div id="val">0<small>%</small></div>
+  </div>
+  <div id="hold"><div id="holdBtn"></div><div class="l">DRŽ</div></div>
+  <div class="msg" id="m-push">Prilož prst a drž. Pusť na 110.</div>
+</div>
+
+<div class="scr" id="s-mem">
+  <div class="hdr"><div class="brand"><span class="t">T E R E A</span><span class="d">DARK RED</span></div>
+    <div style="text-align:center"><div class="st" id="st-mem">POZERAJ</div>
+      <div class="dots" id="pdots"></div></div>
+    <div style="width:90px"></div></div>
+  <div class="back" data-go="s-menu">← SPÄŤ</div>
+  <div id="pads"><div id="glow"></div></div>
+  <div class="msg" id="m-mem"></div>
+</div>
+
+<div class="scr" id="s-draw">
+  <div class="hdr"><div class="brand"><span class="t">T E R E A</span><span class="d">DARK RED</span></div>
+    <div class="st" id="st-draw">PRESNOSŤ 0 %</div></div>
+  <div class="back" data-go="s-menu">← SPÄŤ</div>
+  <canvas id="trcv"></canvas>
+  <svg width="0" height="0" style="position:absolute;visibility:hidden"><path id="tbase" fill="none"/></svg>
+  <div class="msg" id="m-draw">Prilož prst na krúžok a obkresli tvar.</div>
+  <div id="diag"></div>
+</div>
+
+<div class="scr" id="s-rel">
+  <div class="hdr"><div class="brand"><span class="t">T E R E A</span><span class="d">DARK RED</span></div>
+    <div style="text-align:right"><div class="st" id="st-rel">HOD 1 / 3</div>
+      <div class="dots" id="rdots" style="justify-content:flex-end"></div></div></div>
+  <div class="back" data-go="s-menu">← SPÄŤ</div>
+  <canvas id="tcv"></canvas>
+  <div id="pw"><div class="l">SILA</div><div class="b"><i></i></div></div>
+  <div class="msg" id="m-rel">Potiahni dozadu a pusť.</div>
+</div>
+
+<div class="scr" id="s-lat">
+  <div class="hdr"><div class="brand"><span class="t">T E R E A</span><span class="d">DARK RED</span></div></div>
+  <div class="back" data-go="s-menu">← SPÄŤ</div>
+  <div style="font-size:20px;letter-spacing:.2em;margin-bottom:8px">LATENCIA A FPS</div>
+  <div class="sub" style="margin-bottom:26px">Ťukni 12× do rámčeka.</div>
+  <div id="hitbox" style="width:min(520px,88vw);height:22vh;border:1px dashed #4A2028;
+    border-radius:4px;display:flex;align-items:center;justify-content:center;
+    color:#6B5459;letter-spacing:.2em">ŤUKAJ SEM</div>
+  <div id="lat" style="width:min(520px,88vw);margin-top:22px;
+    font:12px/1.85 'SF Mono',Menlo,monospace;color:#A08A8E"></div>
+</div>
+
+</div>
+<script src="proto.js"></script>
+</body></html>
