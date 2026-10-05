@@ -79,6 +79,22 @@ function go(id){
   ({'s-spot':startSpot,'s-push':startPush,'s-mem':startMem,
     's-draw':()=>{startDraw();drawFrame();},'s-rel':startRel,'s-lat':startLat}[id]||(()=>{}))();
 }
+/* ── potlačenie systémových gest prehliadača ──
+   CSS samo nestačí — iOS aj Android si inak vypýtajú výber textu,
+   kontextové menu, lupu pri podržaní alebo priblíženie dvojťuknutím. */
+['contextmenu','selectstart','dragstart','gesturestart','gesturechange']
+  .forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchstart',e=>{
+  if(e.touches.length>1) e.preventDefault();      // žiadne priblíženie dvoma prstami
+},{passive:false});
+document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+let lastTap=0;
+document.addEventListener('touchend',e=>{
+  const now=Date.now();
+  if(now-lastTap<320) e.preventDefault();         // žiadne priblíženie dvojťuknutím
+  lastTap=now;
+},{passive:false});
+
 /* ── vstupné udalosti ──
    Obsluhy sú samostatné funkcie, aby sa dali volať aj z dotykových udalostí.
    Pointer Events pribudli až v Safari 13 — na starších iPadoch ich niet. */
@@ -343,10 +359,13 @@ function tapMem(i,el){
    1. skóre zo surových udalostí, nezávisle od vykresľovania
    2. interpolácia medzi vzorkami — riedke vzorkovanie prestáva trestať
    3. canvas + predkreslená matná vrstva, adaptívne preskakovanie snímkov */
-const DR=[34,26,20];
+const DR=[26,18,12];        // v jednotkách viewBoxu, nie v px — rovnaké na každom displeji
+const PASS=0.85;            // prah na postup
+const PEN=1.0;              // váha trestu za vybočenie
 const VB=600, INSET=0.80;
-let rDraw=0, dPts=[], dSeen=[], dDrag=false, dcv, dcx, baseCv, covPath, covDirty=true;
+let rDraw=0, dPts=[], dSeen=[], dBest=[], dDrag=false, dcv, dcx, baseCv, covPath, covDirty=true;
 let lastIdx=0, lastPt=null, smpN=0, smpT0=0, frN=0, frT0=0, frLast=0, skipF=0, ADAPT=1;
+let pathLen=0, sumD=0, nD=0;
 let sparks=[];   // max 22 kruhov za snímok — lacnejšie než jeden SVG filter
 let offPath=null, isOff=false, offLen=0;   // stopa mimo dráhy
 
@@ -360,11 +379,11 @@ function roundDraw(){
 
   const base=$('#tbase');
   base.setAttribute('d', iqosPath(VB/2,VB/2,VB/2*INSET));
-  const L=base.getTotalLength(), N=220;
+  const L=base.getTotalLength(), N=220; pathLen=L;
   dPts=[]; for(let i=0;i<N;i++){ const p=base.getPointAtLength(L*i/N); dPts.push([p.x,p.y]); }
-  dSeen=new Array(N).fill(false);
+  dSeen=new Array(N).fill(false); dBest=new Array(N).fill(Infinity);
   dDrag=false; lastIdx=0; lastPt=null; smpN=0; frN=0; covDirty=true; ADAPT=1; sparks=[];
-  offPath=new Path2D(); isOff=false; offLen=0;
+  offPath=new Path2D(); isOff=false; offLen=0; sumD=0; nD=0;
 
   baseCv=document.createElement('canvas');
   baseCv.width=dcv.width; baseCv.height=dcv.height;
@@ -380,10 +399,10 @@ function roundDraw(){
   bx.lineTo(st[0]+7,st[1]+14); bx.strokeStyle='#FFB627'; bx.lineWidth=2.5; bx.stroke();
 
   $('#st-draw').textContent='PRESNOSŤ 0 %';
-  $('#m-draw').textContent=`Prilož prst na krúžok a obkresli tvar. · tolerancia ${DR[rDraw]} px`;
+  $('#m-draw').textContent=`Prilož prst na krúžok a obkresli tvar. Drž sa línie — vybočenie sa počíta.`;
   $('#diag').textContent=''; drawCanvas();
 }
-const dTol=()=>DR[rDraw]*(VB/dcv.getBoundingClientRect().width);
+const dTol=()=>DR[rDraw];
 function markSeg(ax,ay,bx,by){
   const T=dTol(), d=Math.hypot(bx-ax,by-ay), steps=Math.max(1,Math.ceil(d/4));
   for(let s=0;s<=steps;s++){
@@ -394,8 +413,22 @@ function markSeg(ax,ay,bx,by){
       const dd=Math.hypot(dPts[i][0]-x,dPts[i][1]-y);
       if(dd<bd){bd=dd;bi=i;}
     }
-    if(bd<=T){ if(!dSeen[bi]) covDirty=true; dSeen[bi]=true; lastIdx=bi; }
+    if(bd<=T){
+      if(!dSeen[bi]) covDirty=true;
+      dSeen[bi]=true; lastIdx=bi;
+      if(bd<dBest[bi]) dBest[bi]=bd;        // ako blízko si prešiel, nie len že si prešiel
+    }
   }
+}
+function dScore(){
+  // presnosť: priemerná odchýlka PRSTA od dráhy, nie najlepšie priblíženie k bodu
+  const T=dTol();
+  const mean = nD ? sumD/nD : T;
+  const r = Math.min(1, mean/T);
+  const prec = Math.max(0, 1 - r*r);
+  const cov = dSeen.filter(Boolean).length/dSeen.length;
+  const pen = Math.min(0.6, offLen/pathLen*PEN);
+  return {cov, prec, mean, pen, score:Math.max(0, cov*prec - pen)};
 }
 function nearDist(x,y){
   let bd=1e9;
@@ -463,7 +496,9 @@ function drawMove(e){
   if(!dDrag)return;
   for(const ev of (e.getCoalescedEvents?e.getCoalescedEvents():[e])){
     const [x,y]=dPt(ev); smpN++;
-    const off = nearDist(x,y) > dTol();
+    const dist = nearDist(x,y);
+    sumD += Math.min(dist, dTol()*2); nD++;     // odľahlé hodnoty orežeme, trest rieši offLen
+    const off = dist > dTol();
     if(lastPt){
       if(off){                                  // mimo dráhy — kreslíme skutočnú stopu prsta
         offPath.moveTo(lastPt[0],lastPt[1]); offPath.lineTo(x,y);
@@ -481,10 +516,10 @@ function drawMove(e){
     }
     lastPt=[x,y];
   }
-  const pct=(dSeen.filter(Boolean).length/dSeen.length*100).toFixed(0);
+  const q=dScore();
   $('#st-draw').innerHTML = isOff
     ? `<span style="color:#E0434A">MIMO DRÁHY</span>`
-    : `PRESNOSŤ ${pct} %`;
+    : `PRESNOSŤ ${(q.score*100).toFixed(0)} %`;
 }
 function drawFrame(){
   if(current!=='s-draw')return;
@@ -504,15 +539,24 @@ function drawFrame(){
 }
 function drawUp(){
   if(!dDrag)return; dDrag=false;
-  const cov=dSeen.filter(Boolean).length/dSeen.length;
-  const s=(performance.now()-smpT0)/1000;
-  $('#diag').textContent=`vzoriek/s  ${(smpN/s).toFixed(0)}\npokrytie   ${(cov*100).toFixed(0)} %`;
-  if(cov>=0.85){
-    $('#m-draw').innerHTML=`<span class="amber">ČISTÁ LINKA — ${(cov*100).toFixed(0)} %</span>`;
+  const q=dScore(), sec=(performance.now()-smpT0)/1000;
+  $('#diag').textContent=
+    `vzoriek/s  ${(smpN/sec).toFixed(0)}\n`+
+    `pokrytie   ${(q.cov*100).toFixed(0)} %\n`+
+    `presnosť   ${(q.prec*100).toFixed(0)} %\n`+
+    `trest      ${(q.pen*100).toFixed(0)} %\n`+
+    `výsledok   ${(q.score*100).toFixed(0)} %`;
+  $('#st-draw').innerHTML=`PRESNOSŤ ${(q.score*100).toFixed(0)} %`;
+  if(q.score>=PASS){
+    $('#m-draw').innerHTML=`<span class="amber">ČISTÁ LINKA — ${(q.score*100).toFixed(0)} %</span>`;
     setTimeout(()=>{ if(current!=='s-draw')return; if(rDraw<2)rDraw++; else rDraw=0; roundDraw(); },1700);
   } else {
-    $('#m-draw').innerHTML=`<span class="scarlet">ROZTRASENÉ — ${(cov*100).toFixed(0)} %</span> · treba 85 %`;
-    setTimeout(()=>{ if(current==='s-draw') roundDraw(); },1900);
+    const why = q.pen>0.05 ? `vybočil si — trest ${(q.pen*100).toFixed(0)} %`
+             : q.cov<0.95   ? `nepokryl si celú líniu`
+             : `drž sa bližšie k línii`;
+    $('#m-draw').innerHTML=
+      `<span class="scarlet">${(q.score*100).toFixed(0)} %</span> · ${why} · treba ${PASS*100} %`;
+    setTimeout(()=>{ if(current==='s-draw') roundDraw(); },2100);
   }
 }
 

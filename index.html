@@ -3,12 +3,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>TEREA Dark Red — prototypy</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DARK RED">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#120609">
+<link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#120609;color:#F2E9EA;overflow:hidden;
   font:16px/1.4 -apple-system,"Helvetica Neue",Arial,sans-serif;
-  touch-action:none;overscroll-behavior:none;user-select:none;
-  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+  touch-action:none;overscroll-behavior:none;overscroll-behavior-y:none;
+  user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;
+  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+  -webkit-user-drag:none;position:fixed;width:100%}
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+canvas,svg,img{pointer-events:auto;-webkit-user-drag:none}
 #app{position:fixed;inset:0}
 .scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
   justify-content:center;padding:0}
