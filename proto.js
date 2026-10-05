@@ -79,42 +79,42 @@ function go(id){
   ({'s-spot':startSpot,'s-push':startPush,'s-mem':startMem,
     's-draw':()=>{startDraw();drawFrame();},'s-rel':startRel,'s-lat':startLat}[id]||(()=>{}))();
 }
-/* ── kompatibilita so starším iOS ──
-   Pointer Events pribudli až v Safari 13. Na starších iPadoch ich niet,
-   tak dotykové udalosti premapujeme na tie isté obsluhy. */
-if(!window.PointerEvent){
-  const wrap=t=>({clientX:t.clientX, clientY:t.clientY, timeStamp:performance.now(),
-                  target:document.elementFromPoint(t.clientX,t.clientY)});
-  document.addEventListener('touchstart',e=>{
-    const t=e.changedTouches[0];
-    document.dispatchEvent(Object.assign(new CustomEvent('pointerdown'),wrap(t)));
-  },{passive:false});
-  document.addEventListener('touchmove',e=>{
-    e.preventDefault();
-    const t=e.changedTouches[0];
-    document.dispatchEvent(Object.assign(new CustomEvent('pointermove'),wrap(t)));
-  },{passive:false});
-  document.addEventListener('touchend',e=>{
-    const t=e.changedTouches[0];
-    document.dispatchEvent(Object.assign(new CustomEvent('pointerup'),wrap(t)));
-  },{passive:false});
+/* ── vstupné udalosti ──
+   Obsluhy sú samostatné funkcie, aby sa dali volať aj z dotykových udalostí.
+   Pointer Events pribudli až v Safari 13 — na starších iPadoch ich niet. */
+function onDown(e){
+  const t=e.target&&e.target.closest?e.target.closest('[data-go]'):null;
+  if(t){ go(t.dataset.go); return; }
+  const inEl=sel=>e.target&&e.target.closest&&e.target.closest(sel);
+  if(current==='s-draw'&&inEl('#trcv')) drawDown(e);
+  if(current==='s-rel' &&inEl('#tcv'))  relDown(e);
+  if(current==='s-push'&&!inEl('.back')) pushDown(e);
+  if(current==='s-spot'&&inEl('.card')) e.target.closest('.card').__pick&&e.target.closest('.card').__pick();
+  if(current==='s-mem' &&inEl('.pad'))  inEl('.pad').__tap&&inEl('.pad').__tap();
 }
-
-document.addEventListener('pointerdown',e=>{
-  const t=e.target.closest('[data-go]'); if(t){ go(t.dataset.go); return; }
-  if(current==='s-draw'&&e.target.closest('#trcv')) drawDown(e);
-  if(current==='s-rel' &&e.target.closest('#tcv'))  relDown(e);
-  if(current==='s-push'&&!e.target.closest('.back')) pushDown(e);
-});
-document.addEventListener('pointermove',e=>{
+function onMove(e){
   if(current==='s-draw') drawMove(e);
   if(current==='s-rel')  relMove(e);
-});
-document.addEventListener('pointerup',e=>{
+}
+function onUp(e){
   if(current==='s-draw') drawUp();
   if(current==='s-rel')  relUp();
   if(current==='s-push') pushUp(e);
-});
+}
+if(window.PointerEvent){
+  document.addEventListener('pointerdown',onDown);
+  document.addEventListener('pointermove',onMove);
+  document.addEventListener('pointerup',onUp);
+} else {
+  const P=(t,ts)=>({clientX:t.clientX, clientY:t.clientY, timeStamp:ts,
+                    target:document.elementFromPoint(t.clientX,t.clientY)});
+  document.addEventListener('touchstart',e=>{
+    e.preventDefault(); onDown(P(e.changedTouches[0],e.timeStamp)); },{passive:false});
+  document.addEventListener('touchmove',e=>{
+    e.preventDefault(); onMove(P(e.changedTouches[0],e.timeStamp)); },{passive:false});
+  document.addEventListener('touchend',e=>{
+    e.preventDefault(); onUp(P(e.changedTouches[0],e.timeStamp)); },{passive:false});
+}
 
 /* ═══════════ NÁSTROJ — latencia a fps ═══════════ */
 function startLat(){
@@ -202,7 +202,7 @@ function roundSpot(){
     set.forEach(c=>{
       const d=document.createElement('div');
       d.className='card'; d.innerHTML=packSVG(c.rgb);
-      d.onpointerdown=ev=>{ev.stopPropagation();pickSpot(c.ok,set);};
+      d.__pick=()=>pickSpot(c.ok,set);
       grid.appendChild(d);
     });
     grid.style.display='grid';
@@ -215,7 +215,7 @@ function pickSpot(ok,set){
   clearTimeout(spotTimer);
   $('#tbar i').style.transition='none';
   $$('#grid .card').forEach((c,i)=>{
-    c.onpointerdown=null;
+    c.__pick=null;
     if(set[i].ok) c.classList.add('win'); else c.classList.add('dim');
   });
   $('#m-spot').innerHTML = ok ? '<span class="amber">MÁŠ OKO</span>'
@@ -297,7 +297,7 @@ function startMem(){
     s.setAttribute('width','196'); s.setAttribute('height','294');
     s.style.transform=`translateX(-50%) rotate(${rot}deg)`;
     s.innerHTML=`<path d="${LEAF}"/>`;
-    s.onpointerdown=ev=>{ev.stopPropagation();tapMem(i,s);};
+    s.__tap=()=>tapMem(i,s);
     pads.appendChild(s);
   });
   rMem=0; playMem();
