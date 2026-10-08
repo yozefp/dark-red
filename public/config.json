@@ -1,0 +1,9 @@
+{
+  "week": "2026-11-25",
+  "code": "472013",
+  "game": "draw",
+  "difficulty": "standard",
+  "rounds": 3,
+  "idleTimeoutMs": 45000,
+  "resultTimeoutMs": 15000
+}

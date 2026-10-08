@@ -1,0 +1,9 @@
+{
+  "name": "TEREA Dark Red",
+  "short_name": "DARK RED",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#120609",
+  "theme_color": "#120609"
+}
