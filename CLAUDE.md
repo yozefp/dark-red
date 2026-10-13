@@ -14,12 +14,19 @@ výsledok), štyri hry, ladiaci panel, konfiguračný panel, offline vrstva.
 
 ## Čo sa rieši teraz
 
-**Hry nevyzerajú ako schválené dizajnové obrazovky.** Implementácia vznikla
-proti ôsmim referenciám v `../ref-obrazovky/`, ale neskôr pribudlo 14 ďalších
-v `../ref-doplnkove/` (prehľad všetkých je `../ref-doplnkove/sheet.png`)
-a tie zapracované nie sú.
+**Hry nevyzerajú ako schválené obrazovky.** Schválené obrazovky sú
+`../ref-obrazovky/` (8 ks, hlavné) a `../ref-doplnkove/` (14 ks, výsledkovky
+a stavy; prehľad v `sheet.png`).
 
-Konkrétne rozdiely, od najväčšieho:
+Hlavná príčina bola **typografická mierka** — všetko bolo zhruba o polovicu
+menšie, než má byť. Obrazovky z dizajnu sú 2000 px široké a veľkosti v nich
+sú proporčné: nadpis na úvodnej má výšku verzálky 7,6 % šírky obrazovky,
+telo textu 2 %. V kóde boli pevné pixely so stropom okolo 46 px.
+Opravené v `src/ui/style.css` — mierka je teraz vo `vw` premenných na
+`:root` (`--fs-hero`, `--fs-h1`, `--fs-body`, `--gut`, …). Pri ďalšom
+ladení meniť tie premenné, nie veľkosti po komponentoch.
+
+Čo ostáva dotiahnuť, od najväčšieho:
 
 1. **Výsledkové obrazovky nemajú vizuál hry.** V dizajne je každá iná a celá
    obrazovka je kompozícia: DRAW má veľký rozžiarený obrys a text `ČISTÁ LINKA`
@@ -38,8 +45,11 @@ Konkrétne rozdiely, od najväčšieho:
 3. **Prehra v MEMORIZE** má v dizajne vlastnú obrazovku s popiskami
    `TVOJ VÝBER` a `TÁTO BOLA NA RADE` — ukazuje, kde sa hráč pomýlil.
 
-Postup: prejsť `../ref-doplnkove/s-01.png` až `s-14.png` jednu po druhej
-a porovnať s `npm run shots`.
+4. **Nadpis na obrazovke s kódom sa láme do troch riadkov**, v dizajne sú dva.
+
+Postup: `npm run shots` spraví PNG všetkých obrazoviek a tie sa porovnávajú
+s referenciami jednu po druhej. Tutoriál a hry treba nasnímať zvlášť cez
+`/test.html`.
 
 ## Čo zostáva mimo toho
 

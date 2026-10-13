@@ -5,6 +5,17 @@
   --line:#3E1E1A;
   --safe-t:env(safe-area-inset-top); --safe-b:env(safe-area-inset-bottom);
   --safe-l:env(safe-area-inset-left); --safe-r:env(safe-area-inset-right);
+
+  /* okraj aj typografická mierka sú podiely šírky — obrazovky z dizajnu
+     sú navrhnuté proporčne, nie na konkrétne rozlíšenie tabletu */
+  --gut:clamp(22px,7vw,96px);
+  --fs-hero: clamp(30px,7.6vw,104px);
+  --fs-h1:   clamp(26px,5.5vw,76px);
+  --fs-body: clamp(13px,2vw,27px);
+  --fs-note: clamp(11px,1.6vw,21px);
+  --fs-cta:  clamp(12px,1.8vw,24px);
+  --fs-brand:clamp(11px,1.6vw,21px);
+  --fs-label:clamp(10px,1.3vw,17px);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;
   -webkit-touch-callout:none}
@@ -20,31 +31,37 @@ html,body{
 /* ── hlavička ── */
 .hdr{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;
   justify-content:space-between;
-  height:calc(52px + var(--safe-t));
-  padding:var(--safe-t) calc(30px + var(--safe-r)) 0 calc(30px + var(--safe-l));
-  font-size:11px;letter-spacing:.24em}
+  height:calc(var(--gut) + var(--safe-t));
+  padding:var(--safe-t) calc(var(--gut) + var(--safe-r)) 0 calc(var(--gut) + var(--safe-l));
+  font-size:var(--fs-brand);letter-spacing:.24em}
 .hdr__brand .t{color:var(--text)}
 .hdr__brand .d{color:var(--amber);margin-left:9px;font-weight:600}
 .hdr__status{color:var(--text);letter-spacing:.26em;text-align:right}
 .hdr__status .off{color:var(--red)}
 .hdr__status .val{margin-left:10px}
 
-/* ── typografia ── */
-.h1{font-size:clamp(28px,4.6vw,46px);line-height:1.12;letter-spacing:.1em;
+/* ── typografia ──
+   Veľkosti sú podiely šírky obrazovky, odmerané zo schválených obrazoviek.
+   Tie sú 2000 px široké, takže napr. nadpis na úvodnej má výšku verzálky
+   110 px, čo je 7,6 % šírky — preto 7.6vw a nie pevné pixely. */
+.h1{font-size:var(--fs-h1);line-height:1.1;letter-spacing:.08em;
   font-weight:300;text-transform:uppercase}
-.rule{width:54px;height:1px;background:var(--amber);margin:18px 0 16px}
-.body{font-size:clamp(12px,1.5vw,15px);color:var(--muted);line-height:1.6}
-.note{font-size:clamp(10px,1.2vw,12px);color:var(--dim);margin-top:6px}
-.val{font-size:clamp(40px,7vw,74px);font-weight:200;line-height:1;
+.h1--hero{font-size:var(--fs-hero)}
+.rule{width:9.2vw;max-width:124px;height:1px;background:var(--amber);
+  margin:3.2vw 0 2.6vw}
+.body{font-size:var(--fs-body);color:var(--muted);line-height:1.55}
+.body .hl{color:var(--amber)}
+.note{font-size:var(--fs-note);color:var(--dim);margin-top:.6vw}
+.val{font-size:clamp(44px,11vw,150px);font-weight:200;line-height:1;
   font-variant-numeric:tabular-nums}
-.val small{font-size:.34em;color:var(--amber);margin-left:8px}
-.lbl{font-size:10px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+.val small{font-size:.3em;color:var(--amber);margin-left:.14em}
+.lbl{font-size:var(--fs-label);letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
 
 /* ── tlačidlo ── */
-.btn{min-height:56px;min-width:150px;padding:0 34px;border:0;
-  background:var(--red);color:#fff;font:inherit;font-size:13px;
+.btn{min-height:max(56px,5.7vw);min-width:max(170px,23vw);padding:0 3.4vw;border:0;
+  background:var(--red);color:#fff;font:inherit;font-size:var(--fs-cta);
   letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
-  box-shadow:0 0 28px rgba(224,42,38,.34)}
+  box-shadow:0 0 34px rgba(224,42,38,.34)}
 .btn:active{background:#B9211E}
 .btn--ghost{background:none;color:var(--dim);box-shadow:none;font-size:11px;
   letter-spacing:.14em;text-transform:none;min-height:44px;min-width:0;padding:0 8px}
@@ -53,9 +70,9 @@ html,body{
 .screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .split{display:grid;grid-template-columns:1fr 1fr;align-items:center;
   width:100%;height:100%;
-  padding:calc(66px + var(--safe-t)) calc(44px + var(--safe-r))
-          calc(40px + var(--safe-b)) calc(44px + var(--safe-l))}
-.split__text{max-width:460px}
+  padding:calc(2 * var(--gut) + var(--safe-t)) calc(var(--gut) + var(--safe-r))
+          calc(1.4 * var(--gut) + var(--safe-b)) calc(var(--gut) + var(--safe-l))}
+.split__text{max-width:46vw}
 .split__visual{display:flex;align-items:center;justify-content:center;height:100%}
 .center{display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;gap:4px}

@@ -5,7 +5,9 @@ export const COPY = {
 
   attract: {
     headline: 'ČO JE ZA DVERAMI?',
-    body: 'Hraj o zariadenie IQOS ILUMA i a balenia TEREA DARK RED.',
+    body: 'Hraj o zariadenie IQOS ILUMA i',
+    body2: 'a balenia TEREA ',
+    body3: 'DARK RED',
     cta: 'DOTKNI SA A HRAJ',
     note: 'Nová hra každý týždeň',
   },

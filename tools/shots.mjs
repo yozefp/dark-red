@@ -10,7 +10,13 @@ import { mkdirSync, readFileSync } from 'node:fs';
 
 const OUT = process.argv[2] ?? 'shots';
 const URL_BASE = process.env.SHOTS_URL ?? 'http://localhost:5173';
-const cfg = JSON.parse(readFileSync(new URL('../public/config.json', import.meta.url), 'utf-8'));
+const raw = JSON.parse(readFileSync(new URL('../public/config.json', import.meta.url), 'utf-8'));
+// rovnaké pravidlo ako v aplikácii: platí posledný týždeň, ktorý už začal
+const day = new Date().toISOString().slice(0, 10);
+const entry = (raw.schedule ?? [])
+  .slice().sort((a, b) => a.from.localeCompare(b.from))
+  .reduce((acc, e) => (e.from <= day ? e : acc), (raw.schedule ?? [])[0]);
+const cfg = { ...raw, ...(entry ?? {}) };
 
 mkdirSync(OUT, { recursive: true });
 const browser = await webkit.launch();
