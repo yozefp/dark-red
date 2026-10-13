@@ -1,0 +1,73 @@
+:root{
+  --bg:#1A0E0C; --bg-deep:#120807;
+  --text:#F0E6E2; --muted:#A08A82; --dim:#6B5450;
+  --amber:#E8A33D; --orange:#FF5A1F; --red:#E02A26; --maroon:#6B2A28;
+  --line:#3E1E1A;
+  --safe-t:env(safe-area-inset-top); --safe-b:env(safe-area-inset-bottom);
+  --safe-l:env(safe-area-inset-left); --safe-r:env(safe-area-inset-right);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none}
+html,body,#app{height:100%;width:100%}
+html,body{
+  background:var(--bg); color:var(--text); overflow:hidden; position:fixed;
+  font:16px/1.45 -apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  touch-action:none; overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent; -webkit-user-drag:none;
+}
+#app{position:relative}
+
+/* ── hlavička ── */
+.hdr{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;
+  justify-content:space-between;
+  height:calc(52px + var(--safe-t));
+  padding:var(--safe-t) calc(30px + var(--safe-r)) 0 calc(30px + var(--safe-l));
+  font-size:11px;letter-spacing:.24em}
+.hdr__brand .t{color:var(--text)}
+.hdr__brand .d{color:var(--amber);margin-left:9px;font-weight:600}
+.hdr__status{color:var(--text);letter-spacing:.26em;text-align:right}
+.hdr__status .off{color:var(--red)}
+.hdr__status .val{margin-left:10px}
+
+/* ── typografia ── */
+.h1{font-size:clamp(28px,4.6vw,46px);line-height:1.12;letter-spacing:.1em;
+  font-weight:300;text-transform:uppercase}
+.rule{width:54px;height:1px;background:var(--amber);margin:18px 0 16px}
+.body{font-size:clamp(12px,1.5vw,15px);color:var(--muted);line-height:1.6}
+.note{font-size:clamp(10px,1.2vw,12px);color:var(--dim);margin-top:6px}
+.val{font-size:clamp(40px,7vw,74px);font-weight:200;line-height:1;
+  font-variant-numeric:tabular-nums}
+.val small{font-size:.34em;color:var(--amber);margin-left:8px}
+.lbl{font-size:10px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+
+/* ── tlačidlo ── */
+.btn{min-height:56px;min-width:150px;padding:0 34px;border:0;
+  background:var(--red);color:#fff;font:inherit;font-size:13px;
+  letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  box-shadow:0 0 28px rgba(224,42,38,.34)}
+.btn:active{background:#B9211E}
+.btn--ghost{background:none;color:var(--dim);box-shadow:none;font-size:11px;
+  letter-spacing:.14em;text-transform:none;min-height:44px;min-width:0;padding:0 8px}
+
+/* ── rozloženia ── */
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.split{display:grid;grid-template-columns:1fr 1fr;align-items:center;
+  width:100%;height:100%;
+  padding:calc(66px + var(--safe-t)) calc(44px + var(--safe-r))
+          calc(40px + var(--safe-b)) calc(44px + var(--safe-l))}
+.split__text{max-width:460px}
+.split__visual{display:flex;align-items:center;justify-content:center;height:100%}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:4px}
+
+/* ── pruh odpočtu na výsledkovke ── */
+.timebar{position:absolute;left:0;bottom:0;height:2px;background:var(--amber);
+  transition:width linear}
+
+/* ── bodky ── */
+.dots{display:flex;gap:7px;justify-content:center;margin-top:8px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.dot--on{background:var(--amber)}
+
+.glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%, rgba(255,90,31,.13), transparent 62%)}

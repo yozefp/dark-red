@@ -40,6 +40,8 @@ export interface DrawScore {
   covered: boolean[];
   /** úseky mimo dráhy — pre vykreslenie červenej stopy */
   offSegments: [Point, Point][];
+  /** je prst mimo dráhy práve teraz — pre stavový riadok */
+  offNow: boolean;
 }
 
 /**
@@ -60,7 +62,7 @@ export function scoreDraw(samples: Sample[], path: Point[], cfg: DrawConfig): Dr
   const covered = new Array(path.length).fill(false);
   const offSegments: [Point, Point][] = [];
   const total = pathLength(path);
-  let sumDev = 0, nDev = 0, offLen = 0, idx = 0;
+  let sumDev = 0, nDev = 0, offLen = 0, idx = 0, offNow = false;
 
   for (let i = 0; i < samples.length; i++) {
     const cur: Point = { x: samples[i].x, y: samples[i].y };
@@ -69,6 +71,7 @@ export function scoreDraw(samples: Sample[], path: Point[], cfg: DrawConfig): Dr
     // odchýlka sa orezáva — veľké vybočenie rieši trest, nie priemer
     sumDev += Math.min(near.distance, cfg.tolerance * 2);
     nDev++;
+    offNow = near.distance > cfg.tolerance;
 
     if (i > 0) {
       const prev: Point = { x: samples[i - 1].x, y: samples[i - 1].y };
@@ -100,7 +103,7 @@ export function scoreDraw(samples: Sample[], path: Point[], cfg: DrawConfig): Dr
   const penalty = Math.min(0.6, (offLen / total) * cfg.penalty);
   const score = Math.max(0, coverage * precision - penalty);
 
-  return { coverage, precision, meanDeviation, penalty, score, covered, offSegments };
+  return { coverage, precision, meanDeviation, penalty, score, covered, offSegments, offNow };
 }
 
 export function configFor(difficulty: string, round: number): DrawConfig {

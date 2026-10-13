@@ -5,6 +5,7 @@ import { scoreDraw, configFor, type DrawScore, type DrawConfig } from './scoring
 import { DrawRenderer } from './render';
 import { COPY } from '@/ui/copy';
 import { C } from '@/ui/tokens';
+import { publishProbe, clearProbe, recordSample } from '@/debug/hooks';
 
 const PATH_POINTS = 220;
 const SHAPE_INSET = 0.80;      // odsadenie od okrajov kvôli odmietaniu dotyku pri ráme
@@ -53,46 +54,63 @@ export function createDrawGame(): GameModule {
       resetRound();
 
       detach = attachPointer(canvas, {
-        onDown: (s) => {
-          const p = toView(s);
-          if (dist(p, path[0]) > START_RADIUS) { hint.textContent = 'Začni pri krúžku.'; return; }
-          drawing = true; samples = [s0(p, s.t)]; finger = p;
-          hint.textContent = '';
-        },
+        onDown: (s) => { recordSample(s); begin(toView(s), s.t); },
         onMove: (list) => {
-          if (!drawing) return;
-          for (const s of list) {
-            const p = toView(s);
-            samples.push(s0(p, s.t));
-            finger = p;
-            renderer.addSpark(p.x, p.y, performance.now());
-          }
-          score = scoreDraw(samples, path, cfg);
-          isOff = score.offSegments.length > 0 &&
-                  score.offSegments[score.offSegments.length - 1][1] === finger;
-          renderer.update(score);
-          paintStatus();
+          for (const s of list) recordSample(s);
+          move(list.map((s) => s0(toView(s), s.t)));
         },
-        onUp: () => {
-          if (!drawing) return;
-          drawing = false;
-          score = scoreDraw(samples, path, cfg);
-          finish();
-        },
+        onUp: () => end(),
       });
 
       loop();
       window.addEventListener('resize', onResize);
+      publishProbe({
+        id: 'draw', round: rc.round, view: VIEW, path,
+        score: () => score?.score ?? 0,
+        replay: (list) => {
+          if (!list.length) return;
+          begin(list[0], list[0].t);
+          move(list.slice(1));
+          end();
+        },
+      });
     },
 
     destroy() {
       cancelAnimationFrame(raf);
       detach?.(); detach = null;
       window.removeEventListener('resize', onResize);
+      clearProbe();
       if (root) root.innerHTML = '';
       root = null;
     },
   };
+
+  function begin(p: Point, t: number) {
+    if (dist(p, path[0]) > START_RADIUS) { hint.textContent = 'Začni pri krúžku.'; return; }
+    drawing = true; samples = [s0(p, t)]; finger = p;
+    hint.textContent = '';
+  }
+
+  function move(list: Sample[]) {
+    if (!drawing) return;
+    for (const s of list) {
+      finger = { x: s.x, y: s.y };
+      samples.push(s);
+      renderer.addSpark(s.x, s.y, performance.now());
+    }
+    score = scoreDraw(samples, path, cfg);
+    isOff = score.offNow;
+    renderer.update(score);
+    paintStatus();
+  }
+
+  function end() {
+    if (!drawing) return;
+    drawing = false;
+    score = scoreDraw(samples, path, cfg);
+    finish();
+  }
 
   function onResize() { renderer.resize(); if (score) renderer.update(score); }
 

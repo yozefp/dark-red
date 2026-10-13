@@ -33,12 +33,41 @@ export function parseConfig(raw: unknown): Config {
 }
 
 const CACHE_KEY = 'tdr.config';
+const OVERRIDE_KEY = 'tdr.override';
+
+/**
+ * Lokálne prebitie konfigurácie na jednom zariadení — na ladenie a testovanie.
+ * Platí výhradne s ?debug=1, takže zabudnuté nastavenie nemôže ovplyvniť
+ * tablet v predajni: bez toho parametra sa číta len nasadená konfigurácia.
+ */
+export function getOverride(): Partial<Config> | null {
+  try {
+    const raw = localStorage.getItem(OVERRIDE_KEY);
+    return raw ? (JSON.parse(raw) as Partial<Config>) : null;
+  } catch { return null; }
+}
+export function setOverride(o: Partial<Config> | null): void {
+  try {
+    if (o) localStorage.setItem(OVERRIDE_KEY, JSON.stringify(o));
+    else localStorage.removeItem(OVERRIDE_KEY);
+  } catch { /* súkromný režim */ }
+}
 
 /**
  * Zdroj konfigurácie je za jednou funkciou, aby sa dal neskôr vymeniť
  * za Cloudflare KV bez zásahu do zvyšku aplikácie.
  */
 export async function loadConfig(signal?: AbortSignal): Promise<Config> {
+  return applyOverride(await fetchConfig(signal));
+}
+
+function applyOverride(cfg: Config): Config {
+  const debug = new URLSearchParams(location.search).has('debug');
+  const o = debug ? getOverride() : null;
+  return o ? parseConfig({ ...cfg, ...o }) : cfg;
+}
+
+async function fetchConfig(signal?: AbortSignal): Promise<Config> {
   try {
     const res = await fetch(`/config.json?t=${Date.now()}`, { signal, cache: 'no-store' });
     if (!res.ok) throw new Error(String(res.status));

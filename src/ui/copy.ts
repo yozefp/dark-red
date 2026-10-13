@@ -51,10 +51,9 @@ export const COPY = {
     },
   },
 
-  /** TODO potvrdiť s klientom — objavuje sa na ôsmich obrazovkách */
   result: {
+    // o cenách appka nehovorí — mechanika je mimo nej a môže sa meniť
     winBody: 'Ukáž výsledok obsluhe.',
-    winNote: 'Si v žrebovaní o hlavnú cenu.',
     loseBody: 'Dnes to nevyšlo.',
     loseNote: 'Skús to znova zajtra — jeden pokus denne.',
   },
