@@ -9,6 +9,8 @@ import { join, relative } from 'node:path';
 
 const DIST = 'dist';
 const SKIP = new Set(['sw.js', 'config.json']);   // config nesmie byť v precache
+/** Panel je pre teba, nie pre tablet — do offline cache hry nepatrí. */
+const SKIP_RE = [/^\/panel\.html$/, /^\/assets\/panel-/, /^\/prototype\//];
 
 function walk(dir) {
   return readdirSync(dir).flatMap((name) => {
@@ -19,7 +21,7 @@ function walk(dir) {
 
 const files = walk(DIST)
   .map((f) => '/' + relative(DIST, f).split(/[\\/]/).join('/'))
-  .filter((p) => !SKIP.has(p.slice(1)))
+  .filter((p) => !SKIP.has(p.slice(1)) && !SKIP_RE.some((re) => re.test(p)))
   .sort();
 
 const hash = createHash('sha1');

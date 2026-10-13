@@ -1,9 +1,15 @@
 {
-  "week": "2026-11-25",
-  "code": "472013",
-  "game": "draw",
   "difficulty": "standard",
   "rounds": 3,
   "idleTimeoutMs": 45000,
-  "resultTimeoutMs": 15000
+  "resultTimeoutMs": 15000,
+  "schedule": [
+    { "from": "2026-11-18", "code": "472013", "game": "draw" },
+    { "from": "2026-11-25", "code": "318594", "game": "push" },
+    { "from": "2026-12-02", "code": "627140", "game": "memorize" },
+    { "from": "2026-12-09", "code": "905326", "game": "release" },
+    { "from": "2026-12-16", "code": "241867", "game": "draw" },
+    { "from": "2026-12-23", "code": "783052", "game": "push" },
+    { "from": "2026-12-30", "code": "164739", "game": "memorize" }
+  ]
 }

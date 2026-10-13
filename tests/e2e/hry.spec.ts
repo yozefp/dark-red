@@ -1,7 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { parseConfig } from '../../src/core/config';
 
-const cfg = JSON.parse(readFileSync(new URL('../../public/config.json', import.meta.url), 'utf-8'));
+// cez tú istú funkciu, akú používa aplikácia — rozvrh aj tu vyberie dnešný týždeň
+const cfg = parseConfig(
+  JSON.parse(readFileSync(new URL('../../public/config.json', import.meta.url), 'utf-8')));
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global { interface Window { __tdr: any } }

@@ -11,6 +11,10 @@ export default defineConfig({
   build: {
     target: 'es2020',          // Android 12+ aj iOS 14+ to zvládnu
     assetsInlineLimit: 0,
+    rollupOptions: {
+      // panel je samostatná stránka, do hry sa z nej nič nedostane
+      input: { main: 'index.html', panel: 'panel.html' },
+    },
   },
   server: { host: true },      // aby sa dalo otvoriť z tabletu v tej istej sieti
 });
