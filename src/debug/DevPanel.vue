@@ -11,7 +11,7 @@ const open = ref(false);
 const fps = ref(0);
 const score = ref(0);
 const GAMES: GameId[] = ['draw', 'push', 'memorize', 'release'];
-const READY: GameId[] = ['draw'];
+const READY: GameId[] = ['draw', 'push', 'memorize'];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const hooks = () => (window as any).__tdr as

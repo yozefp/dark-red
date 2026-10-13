@@ -1,5 +1,6 @@
 import { C } from '@/ui/tokens';
-import { VIEW, type Point } from './geometry';
+import type { Point } from './geometry';
+import type { Stage } from '../shell';
 import type { DrawScore } from './scoring';
 
 /**
@@ -15,8 +16,8 @@ export interface Spark { x: number; y: number; vx: number; vy: number; r: number
 
 export class DrawRenderer {
   private ctx: CanvasRenderingContext2D;
+  private canvas: HTMLCanvasElement;
   private base!: HTMLCanvasElement;
-  private scale = 1;
   private covPath: Path2D | null = null;
   private offPath = new Path2D();
   private sparks: Spark[] = [];
@@ -24,34 +25,38 @@ export class DrawRenderer {
   private frame = 0;
   private lastFrameAt = 0;
 
-  constructor(private canvas: HTMLCanvasElement, private path: Point[]) {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('canvas 2d kontext nedostupný');
-    this.ctx = ctx;
-    this.resize();
+  constructor(private stage: Stage, private path: Point[]) {
+    this.ctx = stage.ctx;
+    this.canvas = stage.canvas;
+    this.buildBase();
+  }
+
+  private get scale() { return this.stage.scale; }
+
+  /** Prechod červená → oranžová zhora nadol, ako na schválenom vizuáli. */
+  private strokeGradient(ctx: CanvasRenderingContext2D) {
+    let lo = Infinity, hi = -Infinity;
+    for (const p of this.path) { if (p.y < lo) lo = p.y; if (p.y > hi) hi = p.y; }
+    const g = ctx.createLinearGradient(0, lo, 0, hi);
+    g.addColorStop(0, C.orange);
+    g.addColorStop(1, C.red);
+    return g;
   }
 
   resize() {
-    const r = this.canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    this.canvas.width = Math.round(r.width * dpr);
-    this.canvas.height = Math.round(r.height * dpr);
-    this.scale = (r.width * dpr) / VIEW;
-    this.buildBase();
+    if (this.stage.fit()) this.buildBase();
   }
 
   /** Matná dráha + štartovací krúžok so šípkou — raz za kolo. */
   private buildBase() {
-    const b = document.createElement('canvas');
-    b.width = this.canvas.width; b.height = this.canvas.height;
-    const x = b.getContext('2d')!;
-    x.setTransform(this.scale, 0, 0, this.scale, 0, 0);
+    const x = this.stage.offscreen();
     x.lineCap = 'round'; x.lineJoin = 'round';
 
     x.beginPath();
     this.path.forEach((p, i) => (i ? x.lineTo(p.x, p.y) : x.moveTo(p.x, p.y)));
     x.closePath();
-    x.strokeStyle = C.line; x.lineWidth = 7; x.stroke();
+    x.strokeStyle = 'rgba(224,42,38,.14)'; x.lineWidth = 22; x.stroke();
+    x.strokeStyle = '#6E3028'; x.lineWidth = 9; x.stroke();
 
     const s = this.path[0];
     x.beginPath(); x.arc(s.x, s.y, 15, 0, Math.PI * 2);
@@ -63,7 +68,7 @@ export class DrawRenderer {
     x.moveTo(s.x - 9, s.y + 26); x.lineTo(s.x - 2, s.y + 14); x.lineTo(s.x + 6, s.y + 24);
     x.strokeStyle = C.amber; x.lineWidth = 2; x.stroke();
 
-    this.base = b;
+    this.base = x.canvas as HTMLCanvasElement;
   }
 
   reset() {
@@ -121,8 +126,8 @@ export class DrawRenderer {
     ctx.strokeStyle = 'rgba(200,52,62,.75)'; ctx.lineWidth = 4; ctx.stroke(this.offPath);
 
     if (this.covPath) {
-      ctx.strokeStyle = 'rgba(255,90,31,.26)'; ctx.lineWidth = 20; ctx.stroke(this.covPath);
-      ctx.strokeStyle = C.orange; ctx.lineWidth = 9; ctx.stroke(this.covPath);
+      ctx.strokeStyle = 'rgba(255,90,31,.26)'; ctx.lineWidth = 24; ctx.stroke(this.covPath);
+      ctx.strokeStyle = this.strokeGradient(ctx); ctx.lineWidth = 10; ctx.stroke(this.covPath);
     }
 
     for (let i = this.sparks.length - 1; i >= 0; i--) {
@@ -158,8 +163,8 @@ export class DrawRenderer {
     this.path.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
     ctx.closePath();
     if (won) {
-      ctx.strokeStyle = 'rgba(255,90,31,.22)'; ctx.lineWidth = 26; ctx.stroke();
-      ctx.strokeStyle = C.orange; ctx.lineWidth = 9; ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,90,31,.22)'; ctx.lineWidth = 28; ctx.stroke();
+      ctx.strokeStyle = this.strokeGradient(ctx); ctx.lineWidth = 10; ctx.stroke();
     } else {
       ctx.strokeStyle = C.maroon; ctx.lineWidth = 7; ctx.stroke();
     }

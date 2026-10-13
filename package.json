@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "shots": "node tools/shots.mjs"
   },
   "dependencies": {
     "gsap": "^3.12.5",

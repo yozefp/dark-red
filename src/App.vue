@@ -7,6 +7,8 @@ import { suppressBrowserGestures } from '@/core/input';
 import { COPY } from '@/ui/copy';
 import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
 import { createDrawGame } from '@/games/draw';
+import { createPushGame } from '@/games/push';
+import { createMemorizeGame } from '@/games/memorize';
 
 import Attract from '@/ui/screens/Attract.vue';
 import CodeEntry from '@/ui/screens/CodeEntry.vue';
@@ -16,7 +18,11 @@ import Result from '@/ui/screens/Result.vue';
 import DevPanel from '@/debug/DevPanel.vue';
 import { tuningOverrides } from '@/debug/tuning';
 
-const GAMES: Record<string, () => GameModule> = { draw: createDrawGame };
+const GAMES: Record<string, () => GameModule> = {
+  draw: createDrawGame,
+  push: createPushGame,
+  memorize: createMemorizeGame,
+};
 
 const game = shallowRef<GameModule | null>(null);
 const round = ref(1);
@@ -66,8 +72,10 @@ const resultHeadline = computed(() => {
   const g = COPY.games[cfg.value.game];
   return state.summary?.passed ? g.win : g.lose;
 });
+// hodnotu si určuje hra — každá meria niečo iné
 const resultValue = computed(() =>
-  last.value ? String(Math.round(last.value.score * 100)) : undefined);
+  last.value?.value ?? (last.value ? String(Math.round(last.value.score * 100)) : undefined));
+const resultUnit = computed(() => last.value?.unit ?? '%');
 </script>
 
 <template>
@@ -86,7 +94,7 @@ const resultValue = computed(() =>
   <Result v-else-if="state.state === 'result'"
           :won="!!state.summary?.passed"
           :headline="resultHeadline"
-          :value="resultValue" unit="%"
+          :value="resultValue" :unit="resultUnit"
           :detail="state.summary?.passed ? undefined : last?.detail"
           :timeout-ms="cfg.resultTimeoutMs"
           @done="go('attract')" />

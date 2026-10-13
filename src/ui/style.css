@@ -71,3 +71,68 @@ html,body{
 
 .glow{position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse at 50% 50%, rgba(255,90,31,.13), transparent 62%)}
+
+/* ── spoločná kostra hier ── */
+.g{display:flex;flex-direction:column;height:100%;width:100%;gap:10px}
+.g__status{display:flex;align-items:baseline;justify-content:center;gap:14px;
+  min-height:20px;letter-spacing:.24em;font-size:11px}
+.g__status .lbl{color:var(--dim)}
+.g__status .lbl.off{color:var(--red)}
+.g__status .val{font-size:15px;font-weight:400;letter-spacing:.1em;color:var(--amber);
+  font-variant-numeric:tabular-nums}
+.g__area{position:relative;flex:1 1 auto;min-height:0;
+  display:flex;align-items:center;justify-content:center}
+.g__area canvas{display:block;touch-action:none}
+.g__hint{min-height:22px;text-align:center;font-size:clamp(11px,1.4vw,13px);
+  color:var(--muted);letter-spacing:.04em}
+
+/* ── PUSH ── */
+.push{position:absolute;inset:0;display:flex;align-items:center;gap:clamp(20px,5vw,70px);
+  padding:0 clamp(16px,4vw,60px)}
+.push__meter{position:relative;display:flex;align-items:stretch;gap:12px;
+  height:min(100%,560px);flex:0 0 auto}
+.push__ticks{position:relative;width:46px}
+.push__tick{position:absolute;right:0;transform:translateY(50%);
+  display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);
+  font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.push__tick::after{content:'';width:11px;height:1px;background:#5A2E28}
+.push__tick--minor{width:6px;right:0}
+.push__tick--minor::after{width:6px;background:var(--line)}
+.push__tick b{font-weight:300}
+.push__tick--hundred b{color:var(--text)}
+.push__tick--target b{color:var(--amber);font-weight:500}
+
+.push__track{position:relative;width:clamp(56px,7vw,86px);
+  border:1px solid var(--line);background:#120707;overflow:hidden}
+.push__fill{position:absolute;left:0;right:0;bottom:0;height:100%;
+  transform:scaleY(0);transform-origin:bottom;
+  background:linear-gradient(to top,#1F8E96,var(--iqos));
+  box-shadow:0 0 34px rgba(47,191,196,.45);
+  transition:background .25s linear,box-shadow .25s linear}
+.push--over .push__fill{
+  background:linear-gradient(to top,var(--red),var(--orange));
+  box-shadow:0 0 46px rgba(255,90,31,.5)}
+.push__band{position:absolute;left:0;right:0;opacity:0;transition:opacity .3s;
+  background:rgba(232,163,61,.14);
+  border-top:2px solid var(--amber);border-bottom:2px solid var(--amber)}
+
+.push__marks{position:relative;width:86px}
+.push__burn,.push__target{position:absolute;left:10px;white-space:nowrap;opacity:0;
+  transform:translateY(50%);transition:opacity .3s;letter-spacing:.2em}
+.push__burn{font-size:10px;color:#9B4A4A}
+.push__target{font-size:14px;color:var(--amber);font-variant-numeric:tabular-nums}
+
+.push__read{flex:1 1 auto;display:flex;align-items:baseline;justify-content:center}
+.push__num{font-size:clamp(70px,16vw,190px);font-weight:200;line-height:.9;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.push__pct{font-size:clamp(20px,4vw,48px);color:var(--amber);margin-left:.12em;font-weight:300}
+.push--win .push__num{color:var(--amber)}
+.push--lose .push__num{color:var(--red)}
+
+.push__padwrap{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:12px}
+.push__pad{width:clamp(74px,9vw,104px);aspect-ratio:1;border-radius:50%;
+  border:1px solid var(--amber);background:#2A1512;
+  transition:background .12s,transform .12s,box-shadow .12s}
+.push--hold .push__pad{background:#4A2018;transform:scale(.94);
+  box-shadow:0 0 30px rgba(232,163,61,.35)}
+.push__padlabel{font-size:11px;letter-spacing:.24em;color:var(--text)}

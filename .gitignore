@@ -5,3 +5,4 @@ playwright-report/
 .vercel
 .wrangler
 .DS_Store
+shots/

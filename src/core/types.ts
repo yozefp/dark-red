@@ -27,6 +27,9 @@ export interface RoundResult {
   score: number;
   /** krátka veta pre hráča, napr. „chýbalo 0,3 %" */
   detail?: string;
+  /** čo sa ukáže na výsledkovej obrazovke — každá hra meria niečo iné */
+  value?: string;
+  unit?: string;
 }
 
 export interface GameSummary {

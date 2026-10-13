@@ -12,6 +12,8 @@ export const C = {
   red:       '#E02A26',
   maroon:    '#6B2A28',
   line:      '#3E1E1A',
+  /** korporátna tyrkysová IQOS — v hre PUSH platí len po stovku */
+  iqos:      '#2FBFC4',
 } as const;
 
 export const T = {

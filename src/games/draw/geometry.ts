@@ -1,17 +1,22 @@
 /** Čistá geometria — žiadny DOM, testovateľné samostatne. */
 
-export interface Point { x: number; y: number }
+import { VIEW, type Point } from '../shell';
 
-/** Súradnicový priestor hry. Všetky tolerancie sú v týchto jednotkách,
- *  takže obtiažnosť je rovnaká na každom displeji. */
-export const VIEW = 600;
+export type { Point };
+/** Tolerancie sú v jednotkách tejto siete, takže obtiažnosť je rovnaká
+ *  na každom displeji. Sieť je spoločná pre všetky hry. */
+export { VIEW };
+
+/** Zaoblenie rohov obrysu. Overené proti schválenému vizuálu. */
+export const K_SHAPE = 0.40;
 
 /**
  * Obrys loga IQOS — zaoblený trojuholník.
  * Kontrolné body ležia na dotyčnici vo vrchole, preto sú rohy hladké.
- * k = 0.7698 by dalo presnú kružnicu; 0.52 dáva trojuholníkový charakter.
+ * k = 0.7698 by dalo presnú kružnicu; 0.40 sedí na schválený vizuál —
+ * dlhé takmer rovné strany a výrazne zaoblené rohy.
  */
-export function iqosPath(cx: number, cy: number, r: number, k = 0.52): string {
+export function iqosPath(cx: number, cy: number, r: number, k = K_SHAPE): string {
   const a = [-90, 30, 150].map((d) => (d * Math.PI) / 180);
   const p = a.map((t) => [cx + r * Math.cos(t), cy + r * Math.sin(t)] as const);
   const tan = a.map((t) => [-Math.sin(t), Math.cos(t)] as const);
@@ -36,7 +41,7 @@ function bez(p0: Point, c1: Point, c2: Point, p1: Point, t: number): Point {
  * Rovnomerné vzorkovanie dráhy bez SVG — aby sa dalo počítať aj v teste,
  * kde getPointAtLength nie je k dispozícii.
  */
-export function samplePath(cx: number, cy: number, r: number, n: number, k = 0.52): Point[] {
+export function samplePath(cx: number, cy: number, r: number, n: number, k = K_SHAPE): Point[] {
   const a = [-90, 30, 150].map((d) => (d * Math.PI) / 180);
   const p = a.map((t) => ({ x: cx + r * Math.cos(t), y: cy + r * Math.sin(t) }));
   const tan = a.map((t) => ({ x: -Math.sin(t), y: Math.cos(t) }));
