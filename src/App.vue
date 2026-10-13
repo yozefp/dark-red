@@ -9,6 +9,7 @@ import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
 import { createDrawGame } from '@/games/draw';
 import { createPushGame } from '@/games/push';
 import { createMemorizeGame } from '@/games/memorize';
+import { createReleaseGame } from '@/games/release';
 
 import Attract from '@/ui/screens/Attract.vue';
 import CodeEntry from '@/ui/screens/CodeEntry.vue';
@@ -22,6 +23,7 @@ const GAMES: Record<string, () => GameModule> = {
   draw: createDrawGame,
   push: createPushGame,
   memorize: createMemorizeGame,
+  release: createReleaseGame,
 };
 
 const game = shallowRef<GameModule | null>(null);

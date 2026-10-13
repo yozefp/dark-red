@@ -23,6 +23,8 @@ export interface GameProbe {
   score: () => number;
   /** prehrá zaznamenanú sériu dotykov — ladenie aj E2E bez reálneho prsta */
   replay: (samples: Sample[]) => void;
+  /** vnútro hry pre ladenie a testy — každá hra vracia niečo iné */
+  info?: () => Record<string, unknown>;
 }
 
 let probe: GameProbe | null = null;

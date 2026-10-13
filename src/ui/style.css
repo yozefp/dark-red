@@ -136,3 +136,11 @@ html,body{
 .push--hold .push__pad{background:#4A2018;transform:scale(.94);
   box-shadow:0 0 30px rgba(232,163,61,.35)}
 .push__padlabel{font-size:11px;letter-spacing:.24em;color:var(--text)}
+
+/* ── RELEASE ── */
+.rel__power{position:absolute;left:clamp(16px,4vw,54px);bottom:18px;width:clamp(120px,19vw,230px);
+  pointer-events:none}
+.rel__plabel{font-size:11px;letter-spacing:.24em;color:var(--muted);margin-bottom:10px}
+.rel__ptrack{height:3px;background:var(--line)}
+.rel__pfill{height:100%;transform:scaleX(0);transform-origin:left;
+  background:linear-gradient(to right,var(--red),var(--amber))}

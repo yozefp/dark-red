@@ -49,6 +49,7 @@ export function createMemorizeGame(): GameModule {
       publishProbe({
         id: 'memorize', round: rc.round, view: stage.vw,
         score: () => judge(seq, got).score,
+        info: () => ({ seq: [...seq], got: [...got], phase }),
         replay: (samples) => {
           // záznam nesie indexy lupeňov v x — prehrá sa ako séria ťuknutí
           for (const s of samples) press(Math.round(s.x));

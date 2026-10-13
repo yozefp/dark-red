@@ -11,3 +11,11 @@ window.addEventListener('error', (e) => reportError(e.error ?? e.message));
 window.addEventListener('unhandledrejection', (e) => reportError(e.reason));
 
 app.mount('#app');
+
+// Offline vrstva. Vo vývoji by len prekážala — service worker by podával
+// staré súbory namiesto tých, ktoré sa práve menia.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(reportError);
+  });
+}

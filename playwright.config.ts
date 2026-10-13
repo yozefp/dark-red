@@ -22,10 +22,20 @@ export default defineConfig({
       use: { ...devices['Galaxy Tab S4 landscape'], hasTouch: true },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-  },
+  // Druhý server je zostavená verzia — offline vrstva beží len tam,
+  // vo vývoji by service worker podával staré súbory.
+  webServer: [
+    {
+      command: 'npm run dev',
+      url: 'http://localhost:5173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+    {
+      command: 'npm run build && npm run preview -- --port 4273',
+      url: 'http://localhost:4273',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });

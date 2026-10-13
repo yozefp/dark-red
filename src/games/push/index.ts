@@ -82,6 +82,7 @@ export function createPushGame(): GameModule {
       publishProbe({
         id: 'push', round: rc.round, view: 100,
         score: () => value / 100,
+        info: () => ({ value, over, target: cfg.target, band: cfg.band }),
         replay: (samples) => {
           // záznam nesie čas držania — prehrá sa ako jedno stlačenie
           const held = samples.length ? samples[samples.length - 1].t - samples[0].t : 0;
