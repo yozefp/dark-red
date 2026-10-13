@@ -59,7 +59,6 @@ export const COPY = {
   },
 
   misc: {
-    otherGame: 'Radšej inú hru',
     round: (a: number, b: number) => `KOLO ${a} / ${b}`,
   },
 } as const;

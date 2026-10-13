@@ -87,7 +87,7 @@ const resultUnit = computed(() => last.value?.unit ?? '%');
              :expected="cfg.code" @ok="onCodeOk" />
 
   <Tutorial v-else-if="state.state === 'tutorial'"
-            :game="cfg.game" @start="startGame" @other="go('attract')" />
+            :game="cfg.game" @start="startGame" />
 
   <GameHost v-else-if="state.state === 'playing' && game"
             :key="`${cfg.game}-${round}`"
