@@ -104,10 +104,33 @@ export async function loadConfig(signal?: AbortSignal): Promise<Config> {
   return applyOverride(await fetchConfig(signal));
 }
 
+/**
+ * Nastavenie z adresy. Platí len s ?debug=1 a prebíja aj uložené prebitie,
+ * takže jeden odkaz spustí presne tú hru, ktorú chceme vyskúšať — netreba
+ * sa prehrabávať panelom ani mazať pamäť prehliadača.
+ *
+ *   ?debug=1&game=push&rounds=1&difficulty=hard&nocode=1
+ */
+export function urlOverride(search = location.search): Partial<Config> {
+  const q = new URLSearchParams(search);
+  const o: Record<string, unknown> = {};
+  if (q.has('game')) o.game = q.get('game');
+  if (q.has('difficulty')) o.difficulty = q.get('difficulty');
+  if (q.has('rounds')) o.rounds = Number(q.get('rounds'));
+  if (q.has('code')) o.code = q.get('code');
+  return o as Partial<Config>;
+}
+
+/** Preskočenie kódu pri testovaní — opäť len s ?debug=1. */
+export function skipCode(search = location.search): boolean {
+  const q = new URLSearchParams(search);
+  return q.has('debug') && q.has('nocode');
+}
+
 function applyOverride(cfg: Config): Config {
   const debug = new URLSearchParams(location.search).has('debug');
-  const o = debug ? getOverride() : null;
-  return o ? parseConfig({ ...cfg, ...o }) : cfg;
+  if (!debug) return cfg;
+  return parseConfig({ ...cfg, ...(getOverride() ?? {}), ...urlOverride() });
 }
 
 async function fetchConfig(signal?: AbortSignal): Promise<Config> {

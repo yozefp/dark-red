@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, computed, shallowRef } from 'vue';
+import { onMounted, onBeforeUnmount, ref, computed, shallowRef, watch } from 'vue';
 import { state, go, setConfig, addRound, finish, reportError } from '@/core/machine';
-import { loadConfig } from '@/core/config';
+import { loadConfig, skipCode } from '@/core/config';
 import { startIdleWatch } from '@/core/idle';
 import { suppressBrowserGestures } from '@/core/input';
 import { COPY } from '@/ui/copy';
@@ -48,6 +48,24 @@ onBeforeUnmount(() => stopIdle?.());
 
 function onCodeOk() { round.value = 1; go('tutorial'); }
 
+// Pri testovaní sa dá kód preskočiť — ?debug=1&nocode=1. Ide to cez
+// obrazovku s kódom, lebo automat skok z úvodu rovno do tutoriálu
+// nepovoľuje a to pravidlo kvôli testovaniu uvoľňovať nechceme.
+function onAttractStart() {
+  go('code');
+  if (skipCode()) onCodeOk();
+}
+
+// prepnutie hry v paneli musí vymeniť aj bežiaci modul, nielen konfiguráciu
+watch(() => cfg.value.game, () => {
+  if (state.state !== 'playing') return;
+  game.value?.destroy();
+  const make = GAMES[cfg.value.game];
+  if (!make) { go('attract'); return; }
+  round.value = 1;
+  game.value = make();
+});
+
 function startGame() {
   const make = GAMES[cfg.value.game];
   if (!make) { reportError(`hra ${cfg.value.game} nie je dostupná`); go('attract'); return; }
@@ -81,7 +99,7 @@ const resultUnit = computed(() => last.value?.unit ?? '%');
 </script>
 
 <template>
-  <Attract v-if="state.state === 'attract'" @start="go('code')" />
+  <Attract v-if="state.state === 'attract'" @start="onAttractStart()" />
 
   <CodeEntry v-else-if="state.state === 'code'"
              :expected="cfg.code" @ok="onCodeOk" />

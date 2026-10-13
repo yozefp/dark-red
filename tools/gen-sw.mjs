@@ -10,7 +10,7 @@ import { join, relative } from 'node:path';
 const DIST = 'dist';
 const SKIP = new Set(['sw.js', 'config.json', '_headers']);  // config nesmie byť v precache
 /** Panel je pre teba, nie pre tablet — do offline cache hry nepatrí. */
-const SKIP_RE = [/^\/panel\.html$/, /^\/assets\/panel-/, /^\/prototype\//];
+const SKIP_RE = [/^\/panel\.html$/, /^\/test\.html$/, /^\/assets\/panel-/, /^\/prototype\//];
 
 function walk(dir) {
   return readdirSync(dir).flatMap((name) => {

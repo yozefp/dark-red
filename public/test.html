@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEREA DARK RED — testovanie</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#140A09;--card:#1E100E;--line:#3E1E1A;--text:#F0E6E2;
+  --muted:#A08A82;--dim:#6B5450;--amber:#E8A33D;--red:#E02A26}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);padding:36px 20px 70px;
+  font:15px/1.55 -apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:21px;font-weight:300;letter-spacing:.12em;text-transform:uppercase}
+h1 b{color:var(--amber);font-weight:600}
+p.sub{color:var(--muted);font-size:13px;margin-top:7px}
+h2{font-size:10px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin:30px 0 11px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:11px}
+a.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:16px 17px;text-decoration:none;color:var(--text)}
+a.card:hover{border-color:var(--amber)}
+a.card .n{font-size:16px;letter-spacing:.1em}
+a.card .d{color:var(--muted);font-size:12.5px;margin-top:5px}
+.row{display:flex;flex-wrap:wrap;gap:9px}
+a.pill{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:20px;
+  padding:7px 14px;font-size:12.5px;color:var(--text);text-decoration:none}
+a.pill:hover{border-color:var(--amber)}
+.note{color:var(--muted);font-size:13px;border-left:2px solid var(--line);padding-left:13px;margin-top:9px}
+.note b{color:var(--text);font-weight:500}
+code{background:#120807;border:1px solid var(--line);border-radius:4px;padding:1px 6px;
+  font:12px ui-monospace,monospace;color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TEREA <b>DARK RED</b> — testovanie</h1>
+  <p class="sub">Každý odkaz spustí hru rovno, bez zadávania kódu. Jedno kolo, štandardná obtiažnosť.</p>
+
+  <h2>Hry</h2>
+  <div class="g">
+    <a class="card" href="/?debug=1&nocode=1&rounds=1&game=draw">
+      <div class="n">DRAW</div><div class="d">Obkresli obrys prstom, bez zdvihnutia.</div></a>
+    <a class="card" href="/?debug=1&nocode=1&rounds=1&game=push">
+      <div class="n">PUSH</div><div class="d">Drž prst, preraz strop a pusť na 110.</div></a>
+    <a class="card" href="/?debug=1&nocode=1&rounds=1&game=memorize">
+      <div class="n">MEMORIZE</div><div class="d">Zopakuj poradie, v ktorom sa rozsvietili lupene.</div></a>
+    <a class="card" href="/?debug=1&nocode=1&rounds=1&game=release">
+      <div class="n">RELEASE</div><div class="d">Tri hody na terč — potiahni a pusť.</div></a>
+  </div>
+
+  <h2>Celé tri kolá</h2>
+  <div class="row">
+    <a class="pill" href="/?debug=1&nocode=1&rounds=3&game=draw">DRAW 3×</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=3&game=push">PUSH 3×</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=3&game=memorize">MEMORIZE 3×</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=3&game=release">RELEASE 3×</a>
+  </div>
+
+  <h2>Obtiažnosť</h2>
+  <div class="row">
+    <a class="pill" href="/?debug=1&nocode=1&rounds=1&difficulty=easy">ľahká</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=1&difficulty=standard">štandardná</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=1&difficulty=hard">ťažká</a>
+  </div>
+
+  <h2>Celý priebeh ako v predajni</h2>
+  <div class="row">
+    <a class="pill" href="/">so zadaním kódu, bez panela</a>
+    <a class="pill" href="/?debug=1">so zadaním kódu, s panelom</a>
+    <a class="pill" href="/panel.html">konfigurácia kampane</a>
+  </div>
+
+  <h2>Čo je dobré vedieť</h2>
+  <p class="note">
+    Ladiaci panel je ozubené koliesko vpravo dole — mení hru, kolá, obtiažnosť,
+    toleranciu aj hranicu úspechu a vie prehrať ťah bez prsta.
+  </p>
+  <p class="note">
+    Parametre sa dajú skladať: <code>?debug=1&amp;game=push&amp;difficulty=hard&amp;rounds=3</code>.
+    Bez <code>debug=1</code> neplatia — tablet v predajni teda vždy berie nasadenú konfiguráciu.
+  </p>
+  <p class="note">
+    V predajni platí <b>kód z rozvrhu</b>, nie tieto odkazy.
+  </p>
+</div>
+</body>
+</html>
