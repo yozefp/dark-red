@@ -1,0 +1,16 @@
+# Cloudflare Pages. Bez tohto by sa týždenný kód mohol podávať zo starej
+# vyrovnávacej pamäte ešte dlho po nasadení.
+
+/config.json
+  Cache-Control: no-cache, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+
+# názvy nesú hash, takže sa obsah pod rovnakou adresou nikdy nezmení
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer

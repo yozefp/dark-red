@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 
 const DIST = 'dist';
-const SKIP = new Set(['sw.js', 'config.json']);   // config nesmie byť v precache
+const SKIP = new Set(['sw.js', 'config.json', '_headers']);  // config nesmie byť v precache
 /** Panel je pre teba, nie pre tablet — do offline cache hry nepatrí. */
 const SKIP_RE = [/^\/panel\.html$/, /^\/assets\/panel-/, /^\/prototype\//];
 
