@@ -30,6 +30,7 @@ onBeforeUnmount(() => props.game.destroy());
 
 <style scoped>
 .gamehost{position:absolute;inset:0;
-  padding:calc(58px + var(--safe-t)) calc(30px + var(--safe-r))
-          calc(34px + var(--safe-b)) calc(30px + var(--safe-l))}
+  /* hlavička je vysoká --gut, hra sa pod ňu nesmie dostať */
+  padding:calc(var(--gut) + 10px + var(--safe-t)) calc(.5 * var(--gut) + var(--safe-r))
+          calc(.45 * var(--gut) + var(--safe-b)) calc(.5 * var(--gut) + var(--safe-l))}
 </style>
