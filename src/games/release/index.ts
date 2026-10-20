@@ -3,7 +3,7 @@ import { attachPointer } from '@/core/input';
 import { createStage, type Stage, type Point } from '../shell';
 import { samplePath } from '../draw/geometry';
 import {
-  configFor, landing, pullPower, shoot, scoreRelease, toMm,
+  configFor, landing, pullPower, shoot, scoreRelease, toMm, maxPullFor,
   type ReleaseConfig, type Shot,
 } from './scoring';
 import { COPY } from '@/ui/copy';
@@ -96,6 +96,7 @@ export function createReleaseGame(): GameModule {
     target = { x: cx, y: stage.vh * 0.26 };
     anchor = { x: cx, y: stage.vh * 0.80 };
     outerR = Math.min(stage.vw, stage.vh) * 0.145;
+    cfg = { ...cfg, maxPull: maxPullFor(anchor.y - target.y, cfg.rangeK) };
     ringPaths = RINGS.map((k) => samplePath(target.x, target.y, outerR * k, 90));
   }
 

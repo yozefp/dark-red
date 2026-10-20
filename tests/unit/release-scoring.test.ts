@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
-  configFor, landing, pullPower, shoot, scoreRelease, toMm, THROWS,
+  configFor, landing, pullPower, shoot, scoreRelease, toMm, maxPullFor, THROWS,
 } from '@/games/release/scoring';
 
-const cfg = configFor('standard', 1);
 const anchor = { x: 300, y: 520 };
 const target = { x: 300, y: 170 };
+// strop ťahu si hra počíta zo vzdialenosti terča — test musí rovnako
+const base = configFor('standard', 1);
+const cfg = { ...base, maxPull: maxPullFor(anchor.y - target.y, base.rangeK) };
 
 describe('RELEASE — hod', () => {
   it('ťah nadol vystrelí nahor', () => {
@@ -61,6 +63,22 @@ describe('RELEASE — hod', () => {
     expect(d(0)).toBe(1);
     expect(d(cfg.tolerance)).toBeCloseTo(0.5, 5);
     expect(d(500)).toBe(0);
+  });
+
+  it('na správny hod treba zhruba dve tretiny sily', () => {
+    // pruh SILA nesmie pri trafenom hode vyzerať, akoby hráč ťahal slabo
+    const need = (anchor.y - target.y) / cfg.rangeK;
+    const p = pullPower(anchor, { x: 300, y: anchor.y + need }, cfg);
+    expect(p).toBeGreaterThan(0.55);
+    expect(p).toBeLessThan(0.75);
+  });
+
+  it('strop ťahu rastie so vzdialenosťou terča', () => {
+    // na vyššej obrazovke musí byť terč stále dosiahnuteľný
+    expect(maxPullFor(600, 2.35)).toBeGreaterThan(maxPullFor(300, 2.35));
+    for (const d of [200, 350, 600, 900]) {
+      expect(maxPullFor(d, 2.35)).toBeGreaterThan(d / 2.35);
+    }
   });
 
   it('tretie kolo je prísnejšie a ťažká obtiažnosť prísnejšia než ľahká', () => {

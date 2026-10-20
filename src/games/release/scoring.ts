@@ -34,12 +34,21 @@ export function configFor(difficulty: string, round: number): ReleaseConfig {
   const t = DIFFICULTY[difficulty] ?? DIFFICULTY.standard;
   return {
     tolerance: t[Math.min(round, t.length) - 1],
-    // Strop ťahu určuje, kde sa zastaví pruh SILA. Pri 190 sa správny hod
-    // zastavil na 43 % a vyzeralo to, akoby hráč ťahal slabo, hoci trafil.
-    maxPull: 125,
+    // Záložná hodnota; hra si ju prepočíta podľa vzdialenosti terča.
+    maxPull: 160,
     rangeK: 2.35,
     throws: THROWS,
   };
+}
+
+/**
+ * Strop ťahu. Odvodzuje sa od vzdialenosti terča, nie z pevného čísla:
+ * pruh SILA tak pri správnom hode ukáže vždy okolo 65 % bez ohľadu na to,
+ * aký tvar má obrazovka — a to je dôležité, keď budú tablety rôzne.
+ * Pevná hodnota by na vyššej obrazovke znamenala, že sa terč nedá dohodiť.
+ */
+export function maxPullFor(distance: number, rangeK: number): number {
+  return (distance / rangeK) * 1.55;
 }
 
 export interface Shot {

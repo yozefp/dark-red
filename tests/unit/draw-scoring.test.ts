@@ -36,14 +36,18 @@ describe('scoreDraw', () => {
     expect(r.penalty).toBe(0);
   });
 
-  it('chvenie v rámci tolerancie skóre zníži', () => {
+  it('chvenie skóre zníži — úmerne tomu, ako je veľké', () => {
+    // merané voči tolerancii kola, nie pevným číslom: tolerancie sa ladia
     const clean = scoreDraw(trace(), path, cfgR3).score;
-    const shaky = scoreDraw(trace({ jitter: 14 }), path, cfgR3).score;
-    expect(shaky).toBeLessThan(clean - 0.05);
+    const mierne = scoreDraw(trace({ jitter: cfgR3.tolerance * 0.8 }), path, cfgR3).score;
+    const silne = scoreDraw(trace({ jitter: cfgR3.tolerance * 1.8 }), path, cfgR3).score;
+    expect(mierne).toBeLessThan(clean);
+    expect(silne).toBeLessThan(mierne - 0.05);
   });
 
   it('vybočenie sa trestá nad rámec pokrytia', () => {
-    const r = scoreDraw(trace({ detour: 70 }), path, cfgR3);
+    // odbočka ďaleko za toleranciu musí kolo položiť, nech je tolerancia akákoľvek
+    const r = scoreDraw(trace({ detour: cfgR3.tolerance * 5 }), path, cfgR3);
     expect(r.penalty).toBeGreaterThan(0.05);
     expect(r.score).toBeLessThan(cfgR3.pass);
     expect(r.offSegments.length).toBeGreaterThan(0);
@@ -56,7 +60,7 @@ describe('scoreDraw', () => {
   });
 
   it('prvé kolo je zhovievavejšie než tretie', () => {
-    const t = trace({ jitter: 16 });
+    const t = trace({ jitter: cfgR3.tolerance * 1.2 });
     expect(scoreDraw(t, path, cfgR1).score)
       .toBeGreaterThan(scoreDraw(t, path, cfgR3).score);
   });

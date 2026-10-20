@@ -1,7 +1,7 @@
 import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
 import { attachPointer } from '@/core/input';
 import { createStage, type Stage, type Point } from '../shell';
-import { ANGLES, ORIGIN_Y, petalPolygon, hitPetal } from './geometry';
+import { ANGLES, ORIGIN_Y, DRAW_ORDER, petalPolygon, hitPetal } from './geometry';
 import { configFor, makeSequence, judge, seeded, type MemoConfig } from './sequence';
 import { COPY } from '@/ui/copy';
 import { C } from '@/ui/tokens';
@@ -161,7 +161,7 @@ export function createMemorizeGame(): GameModule {
     ctx.clearRect(0, 0, stage.canvas.width, stage.canvas.height);
     ctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
 
-    for (let i = 0; i < petals.length; i++) {
+    for (const i of DRAW_ORDER) {
       const g = glow[i];
       ctx.beginPath();
       petals[i].forEach((p, k) => (k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));

@@ -35,33 +35,35 @@ code{background:#120807;border:1px solid var(--line);border-radius:4px;padding:1
 <body>
 <div class="wrap">
   <h1>TEREA <b>DARK RED</b> — testovanie</h1>
-  <p class="sub">Každý odkaz spustí hru rovno, bez zadávania kódu. Jedno kolo, štandardná obtiažnosť.</p>
+  <p class="sub">Každý odkaz spustí hru rovno, bez zadávania kódu —
+    <b>tri kolá a štandardná obtiažnosť, presne ako to pobeží v predajni</b>.
+    Prvé kolo je ľahké, tretie prísne. Kolo sa musí vyhrať, aby sa šlo ďalej.</p>
 
-  <h2>Hry</h2>
+  <h2>Hry — tri kolá ako v predajni</h2>
   <div class="g">
-    <a class="card" href="/?debug=1&nocode=1&rounds=1&game=draw">
+    <a class="card" href="/?debug=1&nocode=1&rounds=3&game=draw">
       <div class="n">DRAW</div><div class="d">Obkresli obrys prstom, bez zdvihnutia.</div></a>
-    <a class="card" href="/?debug=1&nocode=1&rounds=1&game=push">
+    <a class="card" href="/?debug=1&nocode=1&rounds=3&game=push">
       <div class="n">PUSH</div><div class="d">Drž prst, preraz strop a pusť na 110.</div></a>
-    <a class="card" href="/?debug=1&nocode=1&rounds=1&game=memorize">
+    <a class="card" href="/?debug=1&nocode=1&rounds=3&game=memorize">
       <div class="n">MEMORIZE</div><div class="d">Zopakuj poradie, v ktorom sa rozsvietili lupene.</div></a>
-    <a class="card" href="/?debug=1&nocode=1&rounds=1&game=release">
+    <a class="card" href="/?debug=1&nocode=1&rounds=3&game=release">
       <div class="n">RELEASE</div><div class="d">Tri hody na terč — potiahni a pusť.</div></a>
   </div>
 
-  <h2>Celé tri kolá</h2>
+  <h2>Jedno kolo — na rýchlu kontrolu výsledkovky</h2>
   <div class="row">
-    <a class="pill" href="/?debug=1&nocode=1&rounds=3&game=draw">DRAW 3×</a>
-    <a class="pill" href="/?debug=1&nocode=1&rounds=3&game=push">PUSH 3×</a>
-    <a class="pill" href="/?debug=1&nocode=1&rounds=3&game=memorize">MEMORIZE 3×</a>
-    <a class="pill" href="/?debug=1&nocode=1&rounds=3&game=release">RELEASE 3×</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=1&game=draw">DRAW 1×</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=1&game=push">PUSH 1×</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=1&game=memorize">MEMORIZE 1×</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=1&game=release">RELEASE 1×</a>
   </div>
 
   <h2>Obtiažnosť</h2>
   <div class="row">
-    <a class="pill" href="/?debug=1&nocode=1&rounds=1&difficulty=easy">ľahká</a>
-    <a class="pill" href="/?debug=1&nocode=1&rounds=1&difficulty=standard">štandardná</a>
-    <a class="pill" href="/?debug=1&nocode=1&rounds=1&difficulty=hard">ťažká</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=3&difficulty=easy">ľahká</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=3&difficulty=standard">štandardná</a>
+    <a class="pill" href="/?debug=1&nocode=1&rounds=3&difficulty=hard">ťažká</a>
   </div>
 
   <h2>Celý priebeh ako v predajni</h2>

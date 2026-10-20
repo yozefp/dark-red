@@ -52,7 +52,9 @@ describe('MEMORIZE — poradie', () => {
   });
 });
 
-import { petalPolygon, pointInPolygon, hitPetal, ANGLES } from '@/games/memorize/geometry';
+import {
+  petalPolygon, pointInPolygon, hitPetal, ANGLES, DRAW_ORDER,
+} from '@/games/memorize/geometry';
 
 const R = 230;
 const petals = ANGLES.map((a) => petalPolygon(300, 300, a, R));
@@ -77,16 +79,16 @@ describe('MEMORIZE — lupene', () => {
     });
   });
 
-  it('v prekrytí vyhráva lupeň navrchu, teda ten kreslený neskôr', () => {
-    // vo vejári sa susedia prekrývajú zámerne — hráč musí trafiť to,
-    // čo vidí, a navrchu je vždy ten s vyšším indexom
-    const sporne = petals.flatMap((poly, i) =>
-      poly.map((p) => ({ p, i })).filter(({ p }) =>
-        petals.filter((q) => pointInPolygon(p, q)).length > 1));
+  it('v prekrytí vyhráva lupeň navrchu, teda ten kreslený ako posledný', () => {
+    // vo vejári sa susedia prekrývajú zámerne — hráč musí trafiť to, čo vidí
+    const vrstva = (i: number) => DRAW_ORDER.indexOf(i);
+    const sporne = petals.flatMap((poly) =>
+      poly.filter((p) => petals.filter((q) => pointInPolygon(p, q)).length > 1));
     expect(sporne.length).toBeGreaterThan(0);
-    for (const { p } of sporne) {
+    for (const p of sporne) {
       const vsetky = petals.map((q, j) => (pointInPolygon(p, q) ? j : -1)).filter((j) => j >= 0);
-      expect(hitPetal(p, petals)).toBe(Math.max(...vsetky));
+      const navrchu = vsetky.reduce((a, b) => (vrstva(b) > vrstva(a) ? b : a));
+      expect(hitPetal(p, petals)).toBe(navrchu);
     }
   });
 

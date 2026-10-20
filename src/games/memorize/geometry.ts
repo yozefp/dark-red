@@ -10,11 +10,30 @@ export const ANGLES = [-158, -122, -58, -22];
 /** Stred kvetu nesedí v strede plochy — lupene z neho vybiehajú nahor. */
 export const ORIGIN_Y = 0.78;
 
-/** Tvar obálky lupeňa: najširší je v 58 % dĺžky, nie v polovici. */
-const PEAK_A = 1.4;
-const PEAK_B = 1.0;
-const BULGE_NORM =
-  (PEAK_A / (PEAK_A + PEAK_B)) ** PEAK_A * (PEAK_B / (PEAK_A + PEAK_B)) ** PEAK_B;
+/**
+ * Poradie vykresľovania. Vonkajšie lupene idú dozadu, predné dva navrch —
+ * inak by jeden okraj kvetu prekrýval druhý a tvar by vyzeral nakrivo.
+ */
+export const DRAW_ORDER = [0, 3, 1, 2];
+
+/** Normalizácia obálky, aby najširšie miesto malo presne šírku `width`. */
+const BULGE_NORM = (() => {
+  let m = 0;
+  for (let i = 1; i < 400; i++) m = Math.max(m, rawBulge(i / 400));
+  return m;
+})();
+
+/**
+ * Obálka lupeňa: špicatá pri stopke, najširšia za polovicou a na konci
+ * zaoblená, nie zahrotená — tak vyzerajú lupene na schválenej obrazovke.
+ * Odmocnina z (1 − t⁴) dáva na špici zvislú dotyčnicu, čo je tá oblosť.
+ */
+function rawBulge(t: number): number {
+  // t^1.2 drží lupeň pri stopke úzky, odmocnina mu zaobľuje špicu;
+  // spolu to dá polovičný uhol 27°, takže susedia vo vejári sa prekrývajú,
+  // ale nezlievajú do jedného tvaru a dá sa ťuknúť na konkrétny
+  return t ** 1.2 * Math.sqrt(Math.max(0, 1 - t ** 4));
+}
 
 /**
  * Lupeň ako list: vybieha zo stredu, rozšíri sa a končí špicom.
@@ -22,7 +41,7 @@ const BULGE_NORM =
  * a zásah prsta sa počíta tou istou geometriou, akú hráč vidí.
  */
 export function petalPolygon(
-  cx: number, cy: number, angleDeg: number, r: number, width = 0.31, n = 34,
+  cx: number, cy: number, angleDeg: number, r: number, width = 0.36, n = 40,
 ): Point[] {
   const a = (angleDeg * Math.PI) / 180;
   const dir = { x: Math.cos(a), y: Math.sin(a) };
@@ -33,7 +52,7 @@ export function petalPolygon(
     // Obálka listu: špicatá v strede kvetu aj na konci, najširšia za
     // polovicou dĺžky. Lupene sa vo vejári prekrývajú, tak ako v dizajne —
     // o tom, komu ťuknutie patrí, preto rozhoduje poradie vykresľovania.
-    const bulge = (t ** PEAK_A * (1 - t) ** PEAK_B) / BULGE_NORM;
+    const bulge = rawBulge(t) / BULGE_NORM;
     const d = r * t;
     return {
       x: cx + dir.x * d + per.x * w * bulge * side,
@@ -67,6 +86,9 @@ export function pointInPolygon(p: Point, poly: Point[]): boolean {
  * na čo sa pozerá.
  */
 export function hitPetal(p: Point, petals: Point[][]): number {
-  for (let i = petals.length - 1; i >= 0; i--) if (pointInPolygon(p, petals[i])) return i;
+  for (let k = DRAW_ORDER.length - 1; k >= 0; k--) {
+    const i = DRAW_ORDER[k];
+    if (petals[i] && pointInPolygon(p, petals[i])) return i;
+  }
   return -1;
 }

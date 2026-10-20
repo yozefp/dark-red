@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
 import { samplePath, VIEW } from '@/games/draw/geometry';
-import { ANGLES, ORIGIN_Y, petalPolygon } from '@/games/memorize/geometry';
+import { ANGLES, ORIGIN_Y, DRAW_ORDER, petalPolygon } from '@/games/memorize/geometry';
 import { C } from '@/ui/tokens';
 import type { ResultVisual } from '@/core/types';
 
@@ -108,7 +108,8 @@ function drawFlower(ctx: CanvasRenderingContext2D, vh: number, k: number) {
   const chosen = props.won ? -1 : v.got[wrongAt];
   const expected = props.won ? -1 : v.seq[wrongAt];
 
-  petals.forEach((poly, i) => {
+  for (const i of DRAW_ORDER) {
+    const poly = petals[i];
     ctx.beginPath();
     poly.forEach((p, j) => (j ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
     ctx.closePath();
@@ -130,7 +131,7 @@ function drawFlower(ctx: CanvasRenderingContext2D, vh: number, k: number) {
       ctx.strokeStyle = '#8A4036';
     }
     ctx.lineWidth = 2; ctx.stroke();
-  });
+  }
 }
 
 /** RELEASE — terč a na ňom všetky tri hody. */
