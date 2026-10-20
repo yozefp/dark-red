@@ -7,8 +7,9 @@ import type { Point } from '../shell';
  */
 export const ANGLES = [-140, -50, 40, 130];
 
-/** Lupene vybiehajú zo stredu plochy do štyroch strán. */
-export const ORIGIN_Y = 0.5;
+/** Stred kvetu. Odmerané z predlohy — nesedí v strede plochy. */
+export const ORIGIN_Y = 0.52;
+export const CENTER_X = 0.58;
 
 /**
  * Poradie vykresľovania. Lupene sa výrazne prekrývajú, tak ako v predlohe,
@@ -42,6 +43,17 @@ const LEAF: readonly (readonly [number, number])[] = [
   [0.295,0.201], [0.256,0.180], [0.216,0.158], [0.178,0.135],
   [0.140,0.111], [0.103,0.085], [0.067,0.059], [0.032,0.031],
 ] as const;
+
+/**
+ * Najväčší dosah lupeňa od stredu kvetu, v násobkoch jeho dĺžky.
+ * Obrys siaha po osi na 1 a do boku ešte o kus, takže sa z toho dá
+ * presne dopočítať, aký veľký kvet sa na plátno zmestí.
+ */
+export const REACH = (() => {
+  let m = 0;
+  for (const [x, y] of LEAF) m = Math.max(m, Math.hypot(x, y));
+  return m;
+})();
 
 /**
  * Lupeň v danom smere a veľkosti. Vracia mnohouholník, nie Path2D —

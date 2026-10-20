@@ -1,7 +1,9 @@
 import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
 import { attachPointer } from '@/core/input';
 import { createStage, type Stage, type Point } from '../shell';
-import { ANGLES, ORIGIN_Y, DRAW_ORDER, petalPolygon, hitPetal } from './geometry';
+import {
+  ANGLES, ORIGIN_Y, CENTER_X, DRAW_ORDER, REACH, petalPolygon, hitPetal,
+} from './geometry';
 import { configFor, makeSequence, judge, seeded, type MemoConfig } from './sequence';
 import { COPY } from '@/ui/copy';
 import { C } from '@/ui/tokens';
@@ -72,8 +74,12 @@ export function createMemorizeGame(): GameModule {
   }
 
   function layout() {
-    const cx = stage.vw / 2, cy = stage.vh * ORIGIN_Y;
-    const r = Math.min(stage.vh, stage.vw) * 0.46;
+    // Kompozícia odmeraná zo schválenej obrazovky: lupeň je dlhý zhruba
+    // 47 % výšky obrazovky a stred kvetu nesedí v strede plochy.
+    const cx = stage.vw * CENTER_X, cy = stage.vh * ORIGIN_Y;
+    // nikdy viac, než sa na plátno zmestí — orezaný lupeň sa zle ťuká
+    const zmesti = Math.min(cx, stage.vw - cx, cy, stage.vh - cy) / REACH;
+    const r = Math.min(stage.vh * 0.62, zmesti);
     petals = ANGLES.map((a) => petalPolygon(cx, cy, a, r));
   }
 
