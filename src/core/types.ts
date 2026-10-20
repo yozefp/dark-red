@@ -19,6 +19,20 @@ export interface Config {
   resultTimeoutMs: number;
 }
 
+export interface Pt { x: number; y: number }
+
+/**
+ * Čo si výsledková obrazovka od hry odnesie, aby mohla ukázať jej vlastný
+ * obrázok. Hra je v tej chvíli už zbúraná, takže si výsledok nemôže nič
+ * dopýtať — všetko potrebné musí prísť s ním.
+ */
+export type ResultVisual =
+  | { game: 'draw'; off: Pt | null }
+  | { game: 'push'; value: number; band: number }
+  | { game: 'memorize'; seq: number[]; got: number[] }
+  /** zásahy aj tolerancia v násobkoch polomeru terča, nie v pixeloch */
+  | { game: 'release'; hits: Pt[]; tolerance: number };
+
 /** Jedno kolo jednej hry. */
 export interface RoundResult {
   round: number;
@@ -30,6 +44,8 @@ export interface RoundResult {
   /** čo sa ukáže na výsledkovej obrazovke — každá hra meria niečo iné */
   value?: string;
   unit?: string;
+  /** podklad pre obrázok na výsledkovej obrazovke */
+  visual?: ResultVisual;
 }
 
 export interface GameSummary {

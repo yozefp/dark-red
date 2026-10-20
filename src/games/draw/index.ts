@@ -130,7 +130,11 @@ export function createDrawGame(): GameModule {
       round: round.round,
       passed,
       score: score.score,
+      value: String(pct),
+      unit: '%',
       detail: passed ? undefined : reason(score, cfg),
+      // prvé vybočenie — výsledok ním ukáže, kde ťah opustil líniu
+      visual: { game: 'draw', off: score.offSegments[0]?.[1] ?? null },
     };
     self.onRoundEnd?.(r);
   }

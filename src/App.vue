@@ -116,6 +116,7 @@ const resultUnit = computed(() => last.value?.unit ?? '%');
           :headline="resultHeadline"
           :value="resultValue" :unit="resultUnit"
           :detail="state.summary?.passed ? undefined : last?.detail"
+          :visual="last?.visual"
           :timeout-ms="cfg.resultTimeoutMs"
           @done="go('attract')" />
 

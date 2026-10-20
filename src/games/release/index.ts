@@ -152,8 +152,17 @@ export function createReleaseGame(): GameModule {
       passed,
       score: r.score,
       value: String(mm),
-      unit: 'MM OD STREDU',
+      unit: 'mm od stredu',
       detail: passed ? undefined : `najbližší hod bol ${mm} mm od stredu`,
+      // v násobkoch polomeru terča, nie v pixeloch — výsledok kreslí svoj vlastný
+      visual: {
+        game: 'release',
+        hits: shots.map((s) => ({
+          x: (s.point.x - target.x) / outerR,
+          y: (s.point.y - target.y) / outerR,
+        })),
+        tolerance: cfg.tolerance / outerR,
+      },
     };
     self.onRoundEnd?.(res);
   }

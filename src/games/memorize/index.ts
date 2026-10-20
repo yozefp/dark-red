@@ -138,8 +138,9 @@ export function createMemorizeGame(): GameModule {
       passed,
       score,
       value: String(passed ? seq.length : Math.max(0, got.length - 1)),
-      unit: `/ ${seq.length} KROKOV`,
+      unit: `/ ${seq.length}`,
       detail: passed ? undefined : `pomýlil si sa pri ${got.length}. kroku`,
+      visual: { game: 'memorize', seq: [...seq], got: [...got] },
     };
     self.onRoundEnd?.(r);
   }

@@ -54,7 +54,8 @@ html,body{
 .note{font-size:var(--fs-note);color:var(--dim);margin-top:.6vw}
 .val{font-size:clamp(44px,11vw,150px);font-weight:200;line-height:1;
   font-variant-numeric:tabular-nums}
-.val small{font-size:.3em;color:var(--amber);margin-left:.14em}
+.val small{font-size:.2em;color:var(--amber);margin-left:.16em;
+  letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 .lbl{font-size:var(--fs-label);letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
 
 /* ── tlačidlo ── */

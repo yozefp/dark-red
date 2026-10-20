@@ -194,6 +194,7 @@ export function createPushGame(): GameModule {
       value: String(shown),
       unit: '%',
       detail: r.passed ? undefined : reason(r),
+      visual: { game: 'push', value, band: cfg.band },
     };
     self.onRoundEnd?.(res);
   }
