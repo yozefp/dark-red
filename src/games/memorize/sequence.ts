@@ -24,8 +24,10 @@ export interface MemoConfig {
 export function configFor(difficulty: string, round: number): MemoConfig {
   const lens = DIFFICULTY[difficulty] ?? DIFFICULTY.standard;
   const length = lens[Math.min(round, lens.length) - 1];
-  // s dlhším poradím sa tempo mierne zrýchľuje, inak sa kolo vlečie
-  return { length, flashMs: Math.max(300, 520 - (length - 3) * 40), gapMs: 170 };
+  // S dlhším poradím sa tempo mierne zrýchľuje, inak sa kolo vlečie.
+  // Pauza je dosť dlhá na to, aby predošlý lupeň stihol dohasnúť —
+  // inak by svietili dva naraz a poradie by sa zle čítalo.
+  return { length, flashMs: Math.max(300, 520 - (length - 3) * 40), gapMs: 210 };
 }
 
 /**

@@ -11,6 +11,20 @@ import { C } from '@/ui/tokens';
 /** Farby stavov lupeňa — prepísané z dizajnérskeho exportu. */
 const IDLE = { fill: '#1E0B0D', stroke: '#4A1518' };
 const LIT = { fill: '#FF5A1F', stroke: '#120607', glow: '#FF5A1F' };
+
+/**
+ * Hrúbky obrysov sú z exportu, ktorý kreslí v rámci širokom 960.
+ * Naša sieť je široká 600, takže sa prepočítajú — inak by čiara na
+ * tablete vyšla takmer dvakrát hrubšia, než má byť.
+ */
+const PX = 600 / 960;
+
+/**
+ * Časové konštanty prechodu. Rozsvietenie je svižné, zhasínanie dlhšie —
+ * záblesk tak má náběh aj dozvuk a neprepína sa skokom.
+ */
+const RISE_MS = 120;
+const FALL_MS = 210;
 import { publishProbe, clearProbe } from '@/debug/hooks';
 
 type Phase = 'intro' | 'watch' | 'input' | 'done';
@@ -27,8 +41,10 @@ export function createMemorizeGame(): GameModule {
   let seq: number[] = [];
   let got: number[] = [];
   let phase: Phase = 'intro';
-  /** 0..1 jas každého lupeňa — dohasína, aby boli záblesky mäkké */
+  /** 0..1 jas každého lupeňa — plynule sa blíži k cieľu, nie skokom */
   let glow = [0, 0, 0, 0];
+  /** kam jas smeruje: 1 kým lupeň svieti, inak 0 */
+  let target = [0, 0, 0, 0];
   let wrong = -1;
 
   const self: GameModule = {
@@ -99,8 +115,11 @@ export function createMemorizeGame(): GameModule {
     paintStatus();
     let t = 0;
     seq.forEach((i, k) => {
-      after(t, () => { glow[i] = 1; });
-      after(t + cfg.flashMs, () => { if (k === seq.length - 1) toInput(); });
+      after(t, () => { target[i] = 1; });
+      after(t + cfg.flashMs, () => {
+        target[i] = 0;
+        if (k === seq.length - 1) toInput();
+      });
       t += cfg.flashMs + cfg.gapMs;
     });
   }
@@ -120,7 +139,8 @@ export function createMemorizeGame(): GameModule {
 
   function press(i: number) {
     if (phase !== 'input' || i < 0) return;
-    glow[i] = 1;
+    target[i] = 1;
+    after(220, () => { target[i] = 0; });
     got.push(i);
 
     const j = judge(seq, got);
@@ -140,6 +160,7 @@ export function createMemorizeGame(): GameModule {
   function finish(score: number, passed: boolean) {
     phase = 'done';
     timers.forEach(clearTimeout);
+    target = [0, 0, 0, 0];
     stage.setStatus(passed ? COPY.games.memorize.win : COPY.games.memorize.lose,
                     `${got.length - (passed ? 0 : 1)} / ${seq.length}`, !passed);
     stage.setHint(passed
@@ -174,12 +195,14 @@ export function createMemorizeGame(): GameModule {
     ctx.clearRect(0, 0, stage.canvas.width, stage.canvas.height);
     ctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
 
-    // Rozsvietený lupeň ide navrch, inak by ho susedia prekryli a záblesk
-    // by hráčovi ušiel. Zásah sa počíta podľa stáleho poradia — pri
-    // zadávaní aj tak nesvieti nič.
-    const order = [...DRAW_ORDER].sort((a, b) =>
-      (glow[a] > 0.01 ? 1 : 0) - (glow[b] > 0.01 ? 1 : 0));
-    for (const i of order) {
+    // Poradie je stále — dané indexom lupeňa, nie tým, ktorý práve svieti.
+    // Keby sa rozsvietený preklápal navrch, kvet by pri každom záblesku
+    // preskočil a ukážka by sa zle sledovala.
+    for (const i of DRAW_ORDER) {
+      // jas sa k cieľu blíži exponenciálne, nezávisle od snímkovania
+      const tau = target[i] > glow[i] ? RISE_MS : FALL_MS;
+      glow[i] += (target[i] - glow[i]) * (1 - Math.exp(-dt / tau));
+      if (Math.abs(target[i] - glow[i]) < 0.004) glow[i] = target[i];
       const g = glow[i];
       ctx.beginPath();
       petals[i].forEach((p, k) => (k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
@@ -188,26 +211,32 @@ export function createMemorizeGame(): GameModule {
       if (i === wrong) {
         ctx.fillStyle = `rgba(224,42,38,${0.3 + g * 0.5})`;
         ctx.fill();
-        ctx.strokeStyle = C.red; ctx.lineWidth = 2;
-      } else if (g > 0.01) {
-        // rozsvietený lupeň: rozmazaná kópia pod ním a plná výplň, ako v exporte
-        ctx.save();
-        ctx.shadowColor = LIT.glow;
-        ctx.shadowBlur = 26 * (stage.vh / 600) * g;
-        ctx.fillStyle = LIT.fill;
-        ctx.globalAlpha = Math.min(1, 0.2 + g);
-        ctx.fill();
-        ctx.restore();
-        ctx.strokeStyle = LIT.stroke; ctx.lineWidth = 2.5;
-      } else {
-        ctx.fillStyle = IDLE.fill;
-        ctx.fill();
-        ctx.strokeStyle = IDLE.stroke; ctx.lineWidth = 1.4;
+        ctx.strokeStyle = C.red;
+        ctx.lineWidth = 2 * PX;
+        ctx.stroke();
+        continue;
       }
+
+      // tmavý lupeň je vždy dole; svetlo sa cez neho len prelína,
+      // takže prechod je plynulý a poradie tvarov sa nemení
+      ctx.fillStyle = IDLE.fill;
+      ctx.fill();
+      ctx.strokeStyle = IDLE.stroke;
+      ctx.lineWidth = 1 * PX;
       ctx.stroke();
 
-      // dohasínanie beží v čase, nie na snímok — rovnaké na každom tablete
-      glow[i] = Math.max(0, g - dt / 320);
+      if (g > 0.003) {
+        ctx.save();
+        ctx.globalAlpha = g;
+        ctx.shadowColor = LIT.glow;
+        ctx.shadowBlur = 26 * PX * g;
+        ctx.fillStyle = LIT.fill;
+        ctx.fill();
+        ctx.strokeStyle = LIT.stroke;
+        ctx.lineWidth = 2.5 * PX;
+        ctx.stroke();
+        ctx.restore();
+      }
     }
   }
 
