@@ -2,11 +2,15 @@ import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
 import { attachPointer } from '@/core/input';
 import { createStage, type Stage, type Point } from '../shell';
 import {
-  ANGLES, ORIGIN_Y, CENTER_X, DRAW_ORDER, REACH, petalPolygon, hitPetal,
+  ANGLES, LEN_OF_FRAME, DRAW_ORDER, FLOWER, PETAL_LEN, petalPolygon, hitPetal,
 } from './geometry';
 import { configFor, makeSequence, judge, seeded, type MemoConfig } from './sequence';
 import { COPY } from '@/ui/copy';
 import { C } from '@/ui/tokens';
+
+/** Farby stavov lupeňa — prepísané z dizajnérskeho exportu. */
+const IDLE = { fill: '#1E0B0D', stroke: '#4A1518' };
+const LIT = { fill: '#FF5A1F', stroke: '#120607', glow: '#FF5A1F' };
 import { publishProbe, clearProbe } from '@/debug/hooks';
 
 type Phase = 'intro' | 'watch' | 'input' | 'done';
@@ -74,13 +78,17 @@ export function createMemorizeGame(): GameModule {
   }
 
   function layout() {
-    // Kompozícia odmeraná zo schválenej obrazovky: lupeň je dlhý zhruba
-    // 47 % výšky obrazovky a stred kvetu nesedí v strede plochy.
-    const cx = stage.vw * CENTER_X, cy = stage.vh * ORIGIN_Y;
-    // nikdy viac, než sa na plátno zmestí — orezaný lupeň sa zle ťuká
-    const zmesti = Math.min(cx, stage.vw - cx, cy, stage.vh - cy) / REACH;
-    const r = Math.min(stage.vh * 0.62, zmesti);
-    petals = ANGLES.map((a) => petalPolygon(cx, cy, a, r));
+    // Veľkosť je z exportu, ale nikdy väčšia, než sa na plátno zmestí —
+    // orezaný lupeň sa zle ťuká.
+    const k = PETAL_LEN / Math.max(FLOWER.width / stage.vw, FLOWER.height / stage.vh);
+    const len = Math.min(stage.vh * LEN_OF_FRAME, k * 0.96);
+
+    // kvet nie je okolo otočného bodu súmerný, takže pivot dopočítame
+    // z rozmerov kvetu tak, aby celý sedel v strede plochy
+    const u = len / PETAL_LEN;
+    const cx = (stage.vw - FLOWER.width * u) / 2 - FLOWER.left * u;
+    const cy = (stage.vh - FLOWER.height * u) / 2 - FLOWER.up * u;
+    petals = ANGLES.map((a) => petalPolygon(cx, cy, a, len));
   }
 
   function onResize() { if (stage.fit()) layout(); }
@@ -166,28 +174,36 @@ export function createMemorizeGame(): GameModule {
     ctx.clearRect(0, 0, stage.canvas.width, stage.canvas.height);
     ctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
 
-    for (const i of DRAW_ORDER) {
+    // Rozsvietený lupeň ide navrch, inak by ho susedia prekryli a záblesk
+    // by hráčovi ušiel. Zásah sa počíta podľa stáleho poradia — pri
+    // zadávaní aj tak nesvieti nič.
+    const order = [...DRAW_ORDER].sort((a, b) =>
+      (glow[a] > 0.01 ? 1 : 0) - (glow[b] > 0.01 ? 1 : 0));
+    for (const i of order) {
       const g = glow[i];
       ctx.beginPath();
       petals[i].forEach((p, k) => (k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
       ctx.closePath();
 
       if (i === wrong) {
-        ctx.fillStyle = `rgba(224,42,38,${0.25 + g * 0.6})`;
+        ctx.fillStyle = `rgba(224,42,38,${0.3 + g * 0.5})`;
         ctx.fill();
+        ctx.strokeStyle = C.red; ctx.lineWidth = 2;
       } else if (g > 0.01) {
+        // rozsvietený lupeň: rozmazaná kópia pod ním a plná výplň, ako v exporte
         ctx.save();
-        ctx.shadowColor = C.orange;
-        ctx.shadowBlur = 42 * g;
-        ctx.fillStyle = `rgba(255,90,31,${0.12 + g * 0.88})`;
+        ctx.shadowColor = LIT.glow;
+        ctx.shadowBlur = 26 * (stage.vh / 600) * g;
+        ctx.fillStyle = LIT.fill;
+        ctx.globalAlpha = Math.min(1, 0.2 + g);
         ctx.fill();
         ctx.restore();
+        ctx.strokeStyle = LIT.stroke; ctx.lineWidth = 2.5;
       } else {
-        ctx.fillStyle = '#2E1512';
+        ctx.fillStyle = IDLE.fill;
         ctx.fill();
+        ctx.strokeStyle = IDLE.stroke; ctx.lineWidth = 1.4;
       }
-      ctx.strokeStyle = g > 0.01 ? C.orange : '#8A4036';
-      ctx.lineWidth = 2;
       ctx.stroke();
 
       // dohasínanie beží v čase, nie na snímok — rovnaké na každom tablete

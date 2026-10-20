@@ -1,73 +1,84 @@
 import type { Point } from '../shell';
 
 /**
- * Štyri listy okolo stredu, po 90°, pootočené tak, aby žiadny nemieril
- * kolmo dole — tam býva ruka a zakrývala by si vlastný cieľ.
- * Tak sú lupene rozložené na schválenej obrazovke.
+ * Tvar aj rozloženie lupeňov pochádzajú z dizajnérskeho exportu
+ * (2.x Memorize — *.dc.html). Nič sa tu neodhaduje: krivka, uhly aj
+ * poloha stredu sú prepísané z neho jedna k jednej.
+ *
+ * Export kreslí lupeň v rámci 960×600 takto:
+ *   <g transform="translate(480 530) rotate(θ)">
+ *     <path d="M0 60 C 165 10 140 -250 0 -330 C -140 -250 -165 10 0 60 Z">
+ * Lupeň teda stojí zvisle, stopkou pod otočným bodom a špicom nahor,
+ * a do kvetu sa poskladá štyrmi otočeniami.
  */
-export const ANGLES = [-140, -50, 40, 130];
 
-/** Stred kvetu. Odmerané z predlohy — nesedí v strede plochy. */
-export const ORIGIN_Y = 0.52;
-export const CENTER_X = 0.58;
+/** Otočenia lupeňov v stupňoch; 0° mieri nahor. Presne ako v exporte. */
+export const ANGLES = [-78, -27, 27, 78];
 
-/**
- * Poradie vykresľovania. Lupene sa výrazne prekrývajú, tak ako v predlohe,
- * takže navrchu je ten, ktorý sa kreslí ako posledný — a práve jemu patrí
- * ťuknutie do prekrytia.
- */
+/** Poradie vykresľovania — v exporte zľava doprava, pravý je navrchu. */
 export const DRAW_ORDER = [0, 1, 2, 3];
 
-/**
- * Obrys lupeňa, odmeraný zo schválenej obrazovky.
- *
- * Tvar sa nedal rozumne popísať vzorcom — je asymetrický a ostrý len pri
- * stopke, takže každý pokus o krivku vyzeral inak než predloha. Body sú
- * preto vytiahnuté priamo z nej: rozsvietený lupeň sa izoloval podľa farby,
- * obrys sa doplnil o časť zakrytú susedom a znormalizoval tak, že stopka
- * leží v počiatku a špica v [1, 0]. Mierku aj otočenie dodá až hra.
- */
-const LEAF: readonly (readonly [number, number])[] = [
-  [0.000,0.000], [0.035,-0.028], [0.070,-0.056], [0.106,-0.083],
-  [0.143,-0.108], [0.180,-0.133], [0.219,-0.156], [0.258,-0.178],
-  [0.298,-0.198], [0.338,-0.218], [0.379,-0.236], [0.421,-0.252],
-  [0.463,-0.267], [0.507,-0.279], [0.551,-0.284], [0.595,-0.279],
-  [0.638,-0.265], [0.679,-0.248], [0.720,-0.229], [0.761,-0.211],
-  [0.802,-0.193], [0.843,-0.174], [0.884,-0.156], [0.924,-0.136],
-  [0.961,-0.111], [0.986,-0.074], [0.996,-0.031], [0.998,0.014],
-  [0.996,0.059], [0.992,0.104], [0.985,0.148], [0.975,0.192],
-  [0.962,0.234], [0.939,0.273], [0.903,0.298], [0.859,0.310],
-  [0.815,0.315], [0.770,0.317], [0.725,0.316], [0.681,0.314],
-  [0.636,0.308], [0.592,0.301], [0.548,0.292], [0.504,0.281],
-  [0.461,0.268], [0.419,0.254], [0.377,0.238], [0.336,0.220],
-  [0.295,0.201], [0.256,0.180], [0.216,0.158], [0.178,0.135],
-  [0.140,0.111], [0.103,0.085], [0.067,0.059], [0.032,0.031],
-] as const;
+/** Otočný bod kvetu ako podiel rámca 960×600 z exportu. */
+export const PIVOT = { x: 480 / 960, y: 530 / 600 };
+
+/** Dĺžka lupeňa od stopky po špicu vo vlastných jednotkách exportu. */
+export const PETAL_LEN = 390;
+
+/** Dĺžka lupeňa ako podiel výšky rámca — 390 zo 600. */
+export const LEN_OF_FRAME = PETAL_LEN / 600;
+
+function cubic(p0: Point, c1: Point, c2: Point, p3: Point, n: number): Point[] {
+  const out: Point[] = [];
+  for (let i = 0; i < n; i++) {
+    const t = i / n, u = 1 - t;
+    out.push({
+      x: u * u * u * p0.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * p3.x,
+      y: u * u * u * p0.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * p3.y,
+    });
+  }
+  return out;
+}
+
+/** Obrys lupeňa vo vlastných jednotkách exportu, stopka v (0, 60). */
+const LEAF: Point[] = [
+  ...cubic({ x: 0, y: 60 }, { x: 165, y: 10 }, { x: 140, y: -250 }, { x: 0, y: -330 }, 30),
+  ...cubic({ x: 0, y: -330 }, { x: -140, y: -250 }, { x: -165, y: 10 }, { x: 0, y: 60 }, 30),
+];
 
 /**
- * Najväčší dosah lupeňa od stredu kvetu, v násobkoch jeho dĺžky.
- * Obrys siaha po osi na 1 a do boku ešte o kus, takže sa z toho dá
- * presne dopočítať, aký veľký kvet sa na plátno zmestí.
+ * Rozmery celého kvetu v jednotkách exportu, vztiahnuté k otočnému bodu.
+ * Lupene idú od stopky nahor, takže kvet nie je okolo pivota súmerný —
+ * nadol siaha len o kúsok a nahor o celú dĺžku lupeňa. Bez toho by sa
+ * veľkosť počítala z nesprávneho rozmeru a kvet by vyšiel drobný.
  */
-export const REACH = (() => {
-  let m = 0;
-  for (const [x, y] of LEAF) m = Math.max(m, Math.hypot(x, y));
-  return m;
+export const FLOWER = (() => {
+  let left = 0, right = 0, up = 0, down = 0;
+  for (const deg of ANGLES) {
+    const a = (deg * Math.PI) / 180, ca = Math.cos(a), sa = Math.sin(a);
+    for (const { x, y } of LEAF) {
+      const px = x * ca - y * sa, py = x * sa + y * ca;
+      left = Math.min(left, px); right = Math.max(right, px);
+      up = Math.min(up, py); down = Math.max(down, py);
+    }
+  }
+  return { left, right, up, down, width: right - left, height: down - up };
 })();
 
 /**
- * Lupeň v danom smere a veľkosti. Vracia mnohouholník, nie Path2D —
- * zásah prsta sa tým počíta tou istou geometriou, akú hráč vidí.
+ * Lupeň otočený o `rotDeg` okolo bodu (cx, cy), zväčšený tak, aby bol
+ * dlhý `len`. Vracia mnohouholník, nie Path2D — zásah prsta sa tým počíta
+ * tou istou geometriou, akú hráč vidí.
  */
 export function petalPolygon(
-  cx: number, cy: number, angleDeg: number, r: number, width = 1,
+  cx: number, cy: number, rotDeg: number, len: number,
 ): Point[] {
-  const a = (angleDeg * Math.PI) / 180;
+  const k = len / PETAL_LEN;
+  const a = (rotDeg * Math.PI) / 180;
   const ca = Math.cos(a), sa = Math.sin(a);
-  return LEAF.map(([x, y]) => {
-    const px = x * r, py = y * r * width;
-    return { x: cx + px * ca - py * sa, y: cy + px * sa + py * ca };
-  });
+  return LEAF.map(({ x, y }) => ({
+    x: cx + (x * ca - y * sa) * k,
+    y: cy + (x * sa + y * ca) * k,
+  }));
 }
 
 /** Zásah lupeňa. Paprskový test — funguje aj na nekonvexnom tvare. */
@@ -85,9 +96,8 @@ export function pointInPolygon(p: Point, poly: Point[]): boolean {
 
 /**
  * Ktorý lupeň hráč trafil, alebo -1.
- * Vo vejári sa lupene prekrývajú, takže vyhráva ten, ktorý je navrchu —
- * teda ten, ktorý sa kreslí ako posledný. Hráč tak vždy trafí to,
- * na čo sa pozerá.
+ * Pri stopke sa lupene prekrývajú, takže vyhráva ten navrchu — teda ten,
+ * ktorý sa kreslí ako posledný. Hráč tak trafí to, na čo sa pozerá.
  */
 export function hitPetal(p: Point, petals: Point[][]): number {
   for (let k = DRAW_ORDER.length - 1; k >= 0; k--) {

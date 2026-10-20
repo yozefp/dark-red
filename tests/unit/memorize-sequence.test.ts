@@ -53,89 +53,77 @@ describe('MEMORIZE — poradie', () => {
 });
 
 import {
-  petalPolygon, pointInPolygon, hitPetal, ANGLES, DRAW_ORDER,
+  petalPolygon, pointInPolygon, hitPetal, ANGLES, DRAW_ORDER, FLOWER, PETAL_LEN,
 } from '@/games/memorize/geometry';
 
-const R = 230;
-const petals = ANGLES.map((a) => petalPolygon(300, 300, a, R));
-/** ťažisko mnohouholníka — bod, ktorý v tvare určite leží */
-const tezisko = (poly: { x: number; y: number }[]) => ({
-  x: poly.reduce((s, p) => s + p.x, 0) / poly.length,
-  y: poly.reduce((s, p) => s + p.y, 0) / poly.length,
-});
+const L = PETAL_LEN;
+const petals = ANGLES.map((a) => petalPolygon(300, 300, a, L));
+/** bod na osi lupeňa v danom podiele vzdialenosti po špicu */
+const naOsi = (i: number, frac: number) => {
+  const a = (ANGLES[i] * Math.PI) / 180;
+  const d = frac * 330;
+  return { x: 300 + d * Math.sin(a), y: 300 - d * Math.cos(a) };
+};
 
 describe('MEMORIZE — lupene', () => {
-  it('obrys je zmysluplný: dĺžka jedna, stopka v počiatku', () => {
-    // obrys je odmeraný z predlohy, takže test stráži, že sa nepokazil prenos
-    const p = petalPolygon(0, 0, 0, 100);
-    expect(p.length).toBeGreaterThan(40);
-    expect(Math.hypot(p[0].x, p[0].y)).toBeLessThan(1);
-    expect(Math.max(...p.map((q) => q.x))).toBeCloseTo(100, -1);
-    const sirka = Math.max(...p.map((q) => q.y)) - Math.min(...p.map((q) => q.y));
-    expect(sirka).toBeGreaterThan(40);
-    expect(sirka).toBeLessThan(80);
+  it('tvar sedí na dizajnérsky export', () => {
+    // export: M0 60 C 165 10 140 -250 0 -330 … stopka pod otočným bodom,
+    // špica 330 nad ním, šírka symetrická
+    const p = petalPolygon(0, 0, 0, L);
+    const xs = p.map((q) => q.x), ys = p.map((q) => q.y);
+    expect(Math.min(...ys)).toBeCloseTo(-330, 0);
+    expect(Math.max(...ys)).toBeCloseTo(60, 0);
+    expect(Math.max(...xs)).toBeCloseTo(-Math.min(...xs), 0);
+    expect(Math.max(...xs)).toBeGreaterThan(90);
   });
 
-  it('lupeň je asymetrický — jedna hrana vypuklejšia než druhá', () => {
-    // z toho vzniká vrtuľový pohyb kvetu; súmerný list by vyzeral inak
-    const p = petalPolygon(0, 0, 0, 100);
-    const hore = Math.max(...p.map((q) => q.y));
-    const dole = -Math.min(...p.map((q) => q.y));
-    expect(Math.abs(hore - dole)).toBeGreaterThan(1.5);
+  it('mierka je lineárna — dvojnásobná dĺžka, dvojnásobný tvar', () => {
+    const a = petalPolygon(0, 0, 0, L);
+    const b = petalPolygon(0, 0, 0, L * 2);
+    expect(Math.min(...b.map((q) => q.y))).toBeCloseTo(2 * Math.min(...a.map((q) => q.y)), 0);
   });
 
-  it('každý lupeň sa dá trafiť a vždy len jeden', () => {
-    petals.forEach((poly, i) => {
-      const c = tezisko(poly);
-      expect(hitPetal(c, petals)).toBe(i);
-      expect(petals.filter((q) => pointInPolygon(c, q))).toHaveLength(1);
+  it('každý lupeň sa dá trafiť pozdĺž celej osi', () => {
+    ANGLES.forEach((_, i) => {
+      for (const frac of [0.5, 0.75, 0.9]) {
+        const q = naOsi(i, frac);
+        expect(hitPetal(q, petals)).toBe(i);
+        expect(petals.filter((t) => pointInPolygon(q, t))).toHaveLength(1);
+      }
     });
   });
 
   it('bod mimo kvetu nie je zásah', () => {
-    expect(hitPetal({ x: 20, y: 20 }, petals)).toBe(-1);
-    expect(hitPetal({ x: 580, y: 580 }, petals)).toBe(-1);
+    expect(hitPetal({ x: 300, y: 560 }, petals)).toBe(-1);
+    expect(hitPetal({ x: -200, y: -200 }, petals)).toBe(-1);
   });
 
-  it('lupene sa neprekrývajú, takže ťuknutie je jednoznačné', () => {
-    // spoločný stred vynechávame — tam sa tvary stretávajú zámerne
-    for (let i = 0; i < petals.length; i++) {
-      const ine = petals.filter((_, j) => j !== i);
-      for (const p of petals[i]) {
-        if (Math.hypot(p.x - 300, p.y - 300) < 12) continue;
-        expect(hitPetal(p, ine)).toBe(-1);
-      }
-    }
-  });
-
-  it('keby sa tvary prekryli, vyhrá ten navrchu', () => {
-    // poistka pre prípad, že sa lupene raz zámerne rozšíria kvôli vizuálu
-    const siroke = ANGLES.map((a) => petalPolygon(300, 300, a, R, 2.4));
+  it('pri stopke sa lupene prekrývajú a vyhráva ten navrchu', () => {
+    // všetky vyrastajú z jedného bodu, takže prekryv je tam zámerný
     const vrstva = (i: number) => DRAW_ORDER.indexOf(i);
-    const sporne = siroke.flatMap((poly) =>
-      poly.filter((p) => siroke.filter((q) => pointInPolygon(p, q)).length > 1));
+    const sporne = petals.flatMap((poly) =>
+      poly.filter((q) => petals.filter((t) => pointInPolygon(q, t)).length > 1));
     expect(sporne.length).toBeGreaterThan(0);
-    for (const p of sporne) {
-      const vsetky = siroke.map((q, j) => (pointInPolygon(p, q) ? j : -1)).filter((j) => j >= 0);
-      const navrchu = vsetky.reduce((a, b) => (vrstva(b) > vrstva(a) ? b : a));
-      expect(hitPetal(p, siroke)).toBe(navrchu);
+    for (const q of sporne) {
+      const vsetky = petals.map((t, j) => (pointInPolygon(q, t) ? j : -1)).filter((j) => j >= 0);
+      const navrchu = vsetky.reduce((x, y) => (vrstva(y) > vrstva(x) ? y : x));
+      expect(hitPetal(q, petals)).toBe(navrchu);
     }
   });
 
-  it('žiadny lupeň nemieri kolmo dole', () => {
-    // dole býva ruka — taký lupeň by si hráč zakrýval
-    for (const a of ANGLES) {
-      const odDola = Math.abs((((a % 360) + 360) % 360) - 90);
-      expect(odDola).toBeGreaterThan(25);
-    }
+  it('žiadny lupeň nemieri dole — tam býva ruka', () => {
+    for (const a of ANGLES) expect(Math.abs(a)).toBeLessThan(90);
   });
 
+  it('rozmery kvetu zodpovedajú vejáru zo štyroch lupeňov', () => {
+    expect(FLOWER.width).toBeGreaterThan(FLOWER.height);   // vejár je širší než vyšší
+    expect(FLOWER.height).toBeGreaterThan(330 * 0.8);
+    expect(FLOWER.down).toBeGreaterThan(0);                // stopky siahajú pod otočný bod
+  });
 
-  it('tvar je uzavretý a má šírku', () => {
-    const poly = petalPolygon(0, 0, 0, 100);
-    const xs = poly.map((p) => p.x), ys = poly.map((p) => p.y);
-    expect(Math.max(...xs)).toBeCloseTo(100, 0);
-    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(40);
-    expect(pointInPolygon({ x: 50, y: 0 }, poly)).toBe(true);
+  it('obrys je uzavretý a má vnútro', () => {
+    const poly = petalPolygon(0, 0, 0, L);
+    expect(poly.length).toBeGreaterThan(40);
+    expect(pointInPolygon({ x: 0, y: -165 }, poly)).toBe(true);
   });
 });

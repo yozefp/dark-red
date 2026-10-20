@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
 import { samplePath, VIEW } from '@/games/draw/geometry';
-import { ANGLES, ORIGIN_Y, DRAW_ORDER, petalPolygon } from '@/games/memorize/geometry';
+import {
+  ANGLES, LEN_OF_FRAME, DRAW_ORDER, FLOWER, PETAL_LEN, petalPolygon,
+} from '@/games/memorize/geometry';
 import { C } from '@/ui/tokens';
 import type { ResultVisual } from '@/core/types';
 
@@ -100,9 +102,13 @@ function drawShape(ctx: CanvasRenderingContext2D, vh: number, k: number) {
 function drawFlower(ctx: CanvasRenderingContext2D, vh: number, k: number) {
   const v = props.visual;
   if (v.game !== 'memorize') return;
-  const cy = vh * ORIGIN_Y;
-  const r = Math.min(cy * 0.9, VIEW * 0.44);
-  const petals = ANGLES.map((a) => petalPolygon(VIEW / 2, cy, a, r));
+  // rovnaké usadenie ako v hre: podľa skutočných rozmerov kvetu
+  const fit = PETAL_LEN / Math.max(FLOWER.width / VIEW, FLOWER.height / vh);
+  const len = Math.min(vh * LEN_OF_FRAME, fit * 0.96);
+  const u = len / PETAL_LEN;
+  const cx = (VIEW - FLOWER.width * u) / 2 - FLOWER.left * u;
+  const cy = (vh - FLOWER.height * u) / 2 - FLOWER.up * u;
+  const petals = ANGLES.map((a) => petalPolygon(cx, cy, a, len));
 
   const wrongAt = v.got.length - 1;
   const chosen = props.won ? -1 : v.got[wrongAt];
