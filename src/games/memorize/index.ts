@@ -32,6 +32,7 @@ export function createMemorizeGame(): GameModule {
   /** kam jas smeruje: 1 kým lupeň svieti, inak 0 */
   let target = [0, 0, 0, 0];
   let wrong = -1;
+  let flashEl: HTMLElement;
 
   const self: GameModule = {
     id: 'memorize',
@@ -43,6 +44,11 @@ export function createMemorizeGame(): GameModule {
       if (rc.overrides?.length) cfg = { ...cfg, length: rc.overrides.length };
 
       stage = createStage(root, 'fill');
+      // Odpoveď na ťuknutie musí byť tam, kam sa hráč pozerá — teda nad
+      // kvetom, nie v stavovom riadku. Pri zapamätávaní poradia nikto oči
+      // z lupeňov nespustí.
+      stage.area.insertAdjacentHTML('beforeend', '<div class="memo__flash"></div>');
+      flashEl = stage.area.querySelector('.memo__flash') as HTMLElement;
       layout();
       seq = makeSequence(cfg.length, seeded(Date.now() & 0xffff));
       got = [];
@@ -126,13 +132,23 @@ export function createMemorizeGame(): GameModule {
     if (j.failed || j.done) {
       if (j.failed) { wrong = i; badStep = got.length - 1; }
       // Ďalšie ťuknutia už neberieme, ale kolo ukončíme až o chvíľu,
-      // nech odpoveď v bodkách aj záblesk stihne hráč zachytiť.
+      // nech hráč stihne odpoveď prečítať.
       phase = 'done';
+      flash(j.done, true);
       paintStatus();
-      after(520, () => finish(j.score, j.done));
+      after(900, () => finish(j.score, j.done));
       return;
     }
+    flash(true, false);
     paintStatus();
+  }
+
+  /** Veľká odpoveď nad kvetom. Pri poslednom kroku ostáva, inak zmizne. */
+  function flash(ok: boolean, keep: boolean) {
+    const c = COPY.games.memorize;
+    flashEl.textContent = ok ? c.stepOk : c.stepBad;
+    flashEl.className = `memo__flash on ${ok ? 'ok' : 'bad'}`;
+    if (!keep) after(420, () => { flashEl.className = 'memo__flash'; });
   }
 
   /**

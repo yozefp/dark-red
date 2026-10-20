@@ -88,7 +88,8 @@ test.describe('MEMORIZE', () => {
     await page.waitForTimeout(160);
     const hned = await jas();
 
-    // odpoveď dáva stavový riadok, nie lupeň: všetky kroky musia byť splnené
+    // odpoveď musí byť veľkým nad kvetom, tam sa hráč pozerá
+    await expect(page.locator('.memo__flash.ok')).toHaveText('SPRÁVNE');
     await expect(page.locator('.g__status .dot--done')).toHaveCount(seq.length);
     await expect(page.locator('.g__status .dot--bad')).toHaveCount(0);
 
@@ -111,11 +112,24 @@ test.describe('MEMORIZE', () => {
       window.__tdr.replay([{ x: wrong, y: 0, t: 0 }]);
     }, (seq[0] + 1) % 4);
 
-    // chybný krok sa musí okamžite ukázať v stavovom riadku
+    // chybný krok sa musí okamžite ukázať veľkým nad kvetom
+    await expect(page.locator('.memo__flash.bad')).toHaveText('CHYBA');
     await expect(page.locator('.g__status .dot--bad')).toHaveCount(1);
 
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('[data-t="result"]')).toContainText(/nevyšlo/i);
+  });
+
+  test('medzikrok odpoveď ukáže a zasa schová', async ({ page }) => {
+    await play(page, 'memorize');
+    await page.waitForFunction(() => window.__tdr.probe.info().phase === 'input',
+      undefined, { timeout: 15_000 });
+    const { seq } = await info(page) as { seq: number[] };
+
+    await page.evaluate((s) => window.__tdr.replay([{ x: s[0], y: 0, t: 0 }]), seq);
+    await expect(page.locator('.memo__flash.ok')).toBeVisible();
+    // nesmie zavadzať ďalšiemu kroku
+    await expect(page.locator('.memo__flash.on')).toHaveCount(0, { timeout: 2_000 });
   });
 
   test('počas ukážky sa ťuknutia nepočítajú', async ({ page }) => {

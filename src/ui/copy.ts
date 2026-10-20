@@ -40,8 +40,12 @@ export const COPY = {
       cta: 'ŠTART',
       watch: 'SLEDUJ',
       yourTurn: 'TERAZ TY',
+      /** okamžitá odpoveď na ťuknutie, veľkým priamo nad kvetom */
+      stepOk: 'SPRÁVNE',
+      stepBad: 'CHYBA',
       win: 'V PORADÍ',
-      lose: 'STRATIL SI TO',
+      // dvojica funguje ako pri DRAW: „čistá linka" / „mimo linky"
+      lose: 'MIMO PORADIA',
     },
     release: {
       headline: 'TRI HODY. ŽIADNE MIERENIE NADVAKRÁT.',
