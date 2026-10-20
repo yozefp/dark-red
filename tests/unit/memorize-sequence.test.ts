@@ -79,22 +79,37 @@ describe('MEMORIZE — lupene', () => {
     });
   });
 
-  it('v prekrytí vyhráva lupeň navrchu, teda ten kreslený ako posledný', () => {
-    // vo vejári sa susedia prekrývajú zámerne — hráč musí trafiť to, čo vidí
-    const vrstva = (i: number) => DRAW_ORDER.indexOf(i);
-    const sporne = petals.flatMap((poly) =>
-      poly.filter((p) => petals.filter((q) => pointInPolygon(p, q)).length > 1));
-    expect(sporne.length).toBeGreaterThan(0);
-    for (const p of sporne) {
-      const vsetky = petals.map((q, j) => (pointInPolygon(p, q) ? j : -1)).filter((j) => j >= 0);
-      const navrchu = vsetky.reduce((a, b) => (vrstva(b) > vrstva(a) ? b : a));
-      expect(hitPetal(p, petals)).toBe(navrchu);
+  it('lupene sa neprekrývajú, takže ťuknutie je jednoznačné', () => {
+    // spoločný stred vynechávame — tam sa tvary stretávajú zámerne
+    for (let i = 0; i < petals.length; i++) {
+      const ine = petals.filter((_, j) => j !== i);
+      for (const p of petals[i]) {
+        if (Math.hypot(p.x - 300, p.y - 300) < 12) continue;
+        expect(hitPetal(p, ine)).toBe(-1);
+      }
     }
   });
 
-  it('vejár mieri nahor a do strán, nie dole', () => {
-    // dole býva ruka — lupeň by si tam hráč zakrýval
-    for (const a of ANGLES) expect(Math.sin((a * Math.PI) / 180)).toBeLessThan(0);
+  it('keby sa tvary prekryli, vyhrá ten navrchu', () => {
+    // poistka pre prípad, že sa šírka lupeňa raz zväčší kvôli vizuálu
+    const siroke = ANGLES.map((a) => petalPolygon(300, 300, a, R, 0.95));
+    const vrstva = (i: number) => DRAW_ORDER.indexOf(i);
+    const sporne = siroke.flatMap((poly) =>
+      poly.filter((p) => siroke.filter((q) => pointInPolygon(p, q)).length > 1));
+    expect(sporne.length).toBeGreaterThan(0);
+    for (const p of sporne) {
+      const vsetky = siroke.map((q, j) => (pointInPolygon(p, q) ? j : -1)).filter((j) => j >= 0);
+      const navrchu = vsetky.reduce((a, b) => (vrstva(b) > vrstva(a) ? b : a));
+      expect(hitPetal(p, siroke)).toBe(navrchu);
+    }
+  });
+
+  it('žiadny lupeň nemieri kolmo dole', () => {
+    // dole býva ruka — taký lupeň by si hráč zakrýval
+    for (const a of ANGLES) {
+      const odDola = Math.abs(((a % 360) + 360) % 360 - 90);
+      expect(odDola).toBeGreaterThan(25);
+    }
   });
 
   it('tvar je uzavretý a má šírku', () => {

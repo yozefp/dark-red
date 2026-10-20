@@ -73,8 +73,7 @@ export function createMemorizeGame(): GameModule {
 
   function layout() {
     const cx = stage.vw / 2, cy = stage.vh * ORIGIN_Y;
-    // dĺžka lupeňa tak, aby sa vejár zmestil nahor aj do strán
-    const r = Math.min(cy * 0.92, stage.vw * 0.46);
+    const r = Math.min(stage.vh, stage.vw) * 0.46;
     petals = ANGLES.map((a) => petalPolygon(cx, cy, a, r));
   }
 

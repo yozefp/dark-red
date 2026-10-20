@@ -1,39 +1,38 @@
 import type { Point } from '../shell';
 
 /**
- * Lupene vejárom ako lotos — tak sú na schválenej obrazovke.
- * Vejár sa rozprestiera nahor a do strán, dole nemieri žiadny:
- * tam býva ruka a zakrývala by si vlastný cieľ.
+ * Štyri listy okolo stredu, po 90°, pootočené tak, aby žiadny nemieril
+ * kolmo dole — tam býva ruka a zakrývala by si vlastný cieľ.
+ * Tak sú lupene rozložené na schválenej obrazovke.
  */
-export const ANGLES = [-158, -122, -58, -22];
+export const ANGLES = [-140, -50, 40, 130];
 
-/** Stred kvetu nesedí v strede plochy — lupene z neho vybiehajú nahor. */
-export const ORIGIN_Y = 0.78;
+/** Lupene vybiehajú zo stredu plochy do štyroch strán. */
+export const ORIGIN_Y = 0.5;
 
 /**
- * Poradie vykresľovania. Vonkajšie lupene idú dozadu, predné dva navrch —
- * inak by jeden okraj kvetu prekrýval druhý a tvar by vyzeral nakrivo.
+ * Poradie vykresľovania. Lupene sa výrazne prekrývajú, tak ako v predlohe,
+ * takže navrchu je ten, ktorý sa kreslí ako posledný — a práve jemu patrí
+ * ťuknutie do prekrytia.
  */
-export const DRAW_ORDER = [0, 3, 1, 2];
-
-/** Normalizácia obálky, aby najširšie miesto malo presne šírku `width`. */
-const BULGE_NORM = (() => {
-  let m = 0;
-  for (let i = 1; i < 400; i++) m = Math.max(m, rawBulge(i / 400));
-  return m;
-})();
+export const DRAW_ORDER = [0, 1, 2, 3];
 
 /**
- * Obálka lupeňa: špicatá pri stopke, najširšia za polovicou a na konci
- * zaoblená, nie zahrotená — tak vyzerajú lupene na schválenej obrazovke.
- * Odmocnina z (1 − t⁴) dáva na špici zvislú dotyčnicu, čo je tá oblosť.
+ * Obálka lupeňa. Nula na oboch koncoch, takže list je zahrotený pri stopke
+ * aj na špici — tak je to na schválenej obrazovke.
+ *
+ * Dve rôzne obálky robia list asymetrický: vonkajšia hrana je vypuklejšia
+ * než vnútorná. Z toho vzniká ten vrtuľový pohyb kvetu; symetrický list
+ * by vyzeral ako list stromu, nie ako lupeň.
  */
-function rawBulge(t: number): number {
-  // t^1.2 drží lupeň pri stopke úzky, odmocnina mu zaobľuje špicu;
-  // spolu to dá polovičný uhol 27°, takže susedia vo vejári sa prekrývajú,
-  // ale nezlievajú do jedného tvaru a dá sa ťuknúť na konkrétny
-  return t ** 1.2 * Math.sqrt(Math.max(0, 1 - t ** 4));
-}
+/** [mocnina pri stopke, mocnina pri špici, podiel šírky] pre vonkajšiu
+ *  a vnútornú hranu. Vonkajšia je plnšia, vnútorná plochejšia. */
+const OUTER = [1.6, 1.0, 1.0] as const;
+const INNER = [2.1, 1.0, 0.58] as const;
+
+const shape = (t: number, a: number, c: number) => t ** a * (1 - t) ** c;
+/** vrchol obálky, aby najširšie miesto malo presne zadanú šírku */
+const peak = (a: number, c: number) => shape(a / (a + c), a, c);
 
 /**
  * Lupeň ako list: vybieha zo stredu, rozšíri sa a končí špicom.
@@ -41,7 +40,7 @@ function rawBulge(t: number): number {
  * a zásah prsta sa počíta tou istou geometriou, akú hráč vidí.
  */
 export function petalPolygon(
-  cx: number, cy: number, angleDeg: number, r: number, width = 0.36, n = 40,
+  cx: number, cy: number, angleDeg: number, r: number, width = 0.40, n = 44,
 ): Point[] {
   const a = (angleDeg * Math.PI) / 180;
   const dir = { x: Math.cos(a), y: Math.sin(a) };
@@ -49,14 +48,12 @@ export function petalPolygon(
   const w = r * width;
 
   const at = (t: number, side: 1 | -1): Point => {
-    // Obálka listu: špicatá v strede kvetu aj na konci, najširšia za
-    // polovicou dĺžky. Lupene sa vo vejári prekrývajú, tak ako v dizajne —
-    // o tom, komu ťuknutie patrí, preto rozhoduje poradie vykresľovania.
-    const bulge = rawBulge(t) / BULGE_NORM;
+    const [a, c, k] = side === 1 ? OUTER : INNER;
+    const b = (shape(t, a, c) / peak(a, c)) * k;
     const d = r * t;
     return {
-      x: cx + dir.x * d + per.x * w * bulge * side,
-      y: cy + dir.y * d + per.y * w * bulge * side,
+      x: cx + dir.x * d + per.x * w * b * side,
+      y: cy + dir.y * d + per.y * w * b * side,
     };
   };
 
