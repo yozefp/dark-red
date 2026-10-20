@@ -26,30 +26,32 @@ Opravené v `src/ui/style.css` — mierka je teraz vo `vw` premenných na
 `:root` (`--fs-hero`, `--fs-h1`, `--fs-body`, `--gut`, …). Pri ďalšom
 ladení meniť tie premenné, nie veľkosti po komponentoch.
 
-Čo ostáva dotiahnuť, od najväčšieho:
+Hotové od tej opravy:
 
-1. **Výsledkové obrazovky nemajú vizuál hry.** V dizajne je každá iná a celá
-   obrazovka je kompozícia: DRAW má veľký rozžiarený obrys a text `ČISTÁ LINKA`
-   / `94 %` **vnútri** tvaru; PUSH zamrznutý meter vľavo a `PRETLAK` / `110 %`
-   vpravo; MEMORIZE rozsvietený kvet nad textom `V PORADÍ`; RELEASE terč s
-   troma zásahmi a `PRESNE` / `4` / `mm` / `OD STREDU`.
-   `Result.vue` má na to nevyužitý slot `sideVisual`, `App.vue` ho nenapĺňa.
+- **Výsledkovky majú vizuál hry.** Rozloženie sa odvodzuje od hry: obrys
+  DRAW má text vo vnútri, kvet MEMORIZE nad ním, meter PUSH aj terč RELEASE
+  vedľa neho. Podklad posiela každá hra v `RoundResult.visual`.
+- **MEMORIZE je lotos** s prekrývajúcimi sa lupeňmi; o zásahu rozhoduje
+  poradie vykresľovania (hráč trafí to, čo vidí).
+- **Vstup sleduje len prvý prst** — položená dlaň už neprerušuje ťah.
 
-2. **MEMORIZE má zlé usporiadanie lupeňov.** V dizajne je to **lotos —
-   prekrývajúce sa lupene vejárom**, nie kríž zo štyroch samostatných listov,
-   ako je to teraz v `src/games/memorize/geometry.ts`.
-   Pozor: súčasný tvar je zámerne neprekrývajúci sa, aby bolo jednoznačné,
-   do ktorého lupeňa hráč ťukol (overuje to test). Pri prekrytí treba
-   zásah riešiť inak — napríklad poradím vykresľovania zhora nadol.
+Čo ostáva dotiahnuť:
 
-3. **Prehra v MEMORIZE** má v dizajne vlastnú obrazovku s popiskami
-   `TVOJ VÝBER` a `TÁTO BOLA NA RADE` — ukazuje, kde sa hráč pomýlil.
+1. **Tretie kolo DRAW je prakticky nevyhrateľné.** Vyžaduje priemernú
+   odchýlku pod ~10 px po celej dráhe, bežný človek prstom má 15–25 px.
+   Tolerancia v `src/games/draw/scoring.ts` by mala ísť z 12 na 15–16.
+
+2. **Pruh SILA v RELEASE sa pri správnom hode zastaví na 43 %.** Vyzerá to,
+   akoby hráč ťahal slabo, hoci trafil. `maxPull` zo 190 na ~125.
+
+3. **Prvá prehra ukončí celú hru.** Zvážiť jeden opravný pokus v prvom kole —
+   dizajnový zámer bol, že prvé kolo vyhrá takmer každý.
 
 4. **Nadpis na obrazovke s kódom sa láme do troch riadkov**, v dizajne sú dva.
 
-Postup: `npm run shots` spraví PNG všetkých obrazoviek a tie sa porovnávajú
-s referenciami jednu po druhej. Tutoriál a hry treba nasnímať zvlášť cez
-`/test.html`.
+5. Drobnosti: `onRoundEnd` v `App.vue` má nezrušený `setTimeout`;
+   výsledkovka má dva odpočty naraz (`Result.vue` aj `idle.ts`);
+   `scheduleReturn` v `idle.ts` je mŕtvy kód.
 
 ## Čo zostáva mimo toho
 
