@@ -1,5 +1,16 @@
 /** Všetky texty na jednom mieste.
- *  Zmena vety na výsledkovke = jeden riadok, nie osem komponentov. */
+ *  Zmena vety na výsledkovke = jeden riadok, nie osem komponentov.
+ *
+ *  Dve pravidlá, ktoré tu platia pri každej zmene:
+ *
+ *  1. ŽIADNY ROD. Hrá to aj žena, takže „vyhral si" ani „spálil si to"
+ *     nejde. Minulý čas sa v slovenčine ohýba podľa rodu — preto sú tu
+ *     prítomné časy a neosobné tvary („pustenie prišlo neskoro").
+ *  2. HLÁŠKA KOLA ≠ NADPIS VÝSLEDKU. `roundWin` je komentár k jednému
+ *     kolu priamo v hre, kde za ním ide číslo („ČISTÁ LINKA — 94 %").
+ *     Na výsledkovke sa hráč pýta len „vyhral som?", tam ide `result.win`,
+ *     rovnaký pre všetky hry.
+ */
 export const COPY = {
   brand: { name: 'T E R E A', product: 'DARK RED' },
 
@@ -24,15 +35,18 @@ export const COPY = {
       rule: 'Prstom. Bez zdvihnutia.',
       cta: 'ŠTART',
       status: 'PRESNOSŤ',
-      win: 'ČISTÁ LINKA',
-      lose: 'MIMO LINKY',
+      roundWin: 'ČISTÁ LINKA',
+      roundLose: 'MIMO LINKY',
     },
     push: {
       headline: 'STO PERCENT JE STROP. PRE OSTATNÝCH.',
       rule: 'Drž. Pusť na stodesiatich.',
       cta: 'PRILOŽ PRST',
-      win: 'PRETLAK',
-      lose: 'SPÁLIL SI TO',
+      roundWin: 'PRETLAK',
+      /** držal pridlho, meter prerazil stodvadsiatku */
+      roundBurnt: 'PREPÁLENÉ',
+      /** pustil skôr, než sa meter dostal do pásma */
+      roundEarly: 'PRISKORO',
     },
     memorize: {
       headline: 'ZAPAMÄTAJ SI SVETLO',
@@ -40,31 +54,34 @@ export const COPY = {
       cta: 'ŠTART',
       watch: 'SLEDUJ',
       yourTurn: 'TERAZ TY',
-      /** okamžitá odpoveď na ťuknutie, veľkým priamo nad kvetom */
-      stepOk: 'SPRÁVNE',
-      stepBad: 'CHYBA',
-      win: 'V PORADÍ',
-      // dvojica funguje ako pri DRAW: „čistá linka" / „mimo linky"
-      lose: 'MIMO PORADIA',
+      /** veľká odpoveď nad kvetom, raz za kolo */
+      flashOk: 'SPRÁVNE',
+      flashBad: 'CHYBA',
+      roundWin: 'CELÉ PORADIE',
+      roundLose: 'ZLÉ PORADIE',
     },
     release: {
       headline: 'TRI HODY. ŽIADNE MIERENIE NADVAKRÁT.',
       rule: 'Potiahni a pusť.',
       cta: 'ŠTART',
       power: 'SILA',
-      win: 'PRESNE',
-      lose: 'VEDĽA',
+      roundWin: 'DO STREDU',
+      roundLose: 'VEDĽA',
     },
   },
 
   result: {
-    // o cenách appka nehovorí — mechanika je mimo nej a môže sa meniť
+    // o cenách appka nehovorí — mechanika je mimo nej a môže sa meniť.
+    // Appka ani nestráži počet pokusov, takže nesľubuje „jeden denne".
+    win: 'MÁŠ TO',
+    lose: 'NEVYŠLO TO',
     winBody: 'Ukáž výsledok obsluhe.',
-    loseBody: 'Dnes to nevyšlo.',
-    loseNote: 'Skús to znova zajtra — jeden pokus denne.',
+    loseBody: 'O ďalší pokus požiadaj obsluhu.',
   },
 
   misc: {
     round: (a: number, b: number) => `KOLO ${a} / ${b}`,
+    /** 1 krok, 2–4 kroky, 5+ krokov */
+    steps: (n: number) => `${n} ${n === 1 ? 'krok' : n < 5 ? 'kroky' : 'krokov'}`,
   },
 } as const;

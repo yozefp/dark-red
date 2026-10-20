@@ -145,8 +145,8 @@ export function createReleaseGame(): GameModule {
     const r = scoreRelease(shots, cfg);
     const mm = toMm(r.best);
     stage.setHint(passed
-      ? `<b style="color:var(--amber)">${COPY.games.release.win} — ${mm} mm od stredu</b>`
-      : `<b style="color:var(--red)">${COPY.games.release.lose} — ${mm} mm od stredu</b>`);
+      ? `<b style="color:var(--amber)">${COPY.games.release.roundWin} — ${mm} mm od stredu</b>`
+      : `<b style="color:var(--red)">${COPY.games.release.roundLose} — ${mm} mm od stredu</b>`);
 
     const res: RoundResult = {
       round: round.round,

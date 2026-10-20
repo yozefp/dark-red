@@ -184,8 +184,8 @@ export function createPushGame(): GameModule {
 
     const shown = Math.round(value);
     shell.setHint(r.passed
-      ? `<b style="color:var(--amber)">${COPY.games.push.win} — ${shown} %</b>`
-      : `<b style="color:var(--red)">${r.burnt ? COPY.games.push.lose : 'VEDĽA'} — ${shown} %</b>`);
+      ? `<b style="color:var(--amber)">${COPY.games.push.roundWin} — ${shown} %</b>`
+      : `<b style="color:var(--red)">${label(r)} — ${shown} %</b>`);
 
     const res: RoundResult = {
       round: round.round,
@@ -217,8 +217,14 @@ export function createPushGame(): GameModule {
   return self;
 }
 
+/** Prehrať sa dá dvoma spôsobmi a hráč musí vedieť ktorým. */
+function label(r: PushScore): string {
+  const c = COPY.games.push;
+  return r.burnt ? c.roundBurnt : c.roundEarly;
+}
+
 function reason(r: PushScore): string {
-  if (r.burnt) return 'spálil si to — pustil si až za stodvadsiatimi';
-  if (r.early) return 'pustil si pred stovkou';
-  return `minul si pásmo o ${r.offset.toFixed(1)} %`;
+  if (r.burnt) return 'pustenie prišlo až za stodvadsiatimi';
+  if (r.early) return 'pustenie prišlo pred stovkou';
+  return `mimo pásma o ${r.offset.toFixed(1)} %`;
 }

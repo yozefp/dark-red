@@ -88,10 +88,10 @@ function onRoundEnd(r: RoundResult) {
   }, 1500);
 }
 
-const resultHeadline = computed(() => {
-  const g = COPY.games[cfg.value.game];
-  return state.summary?.passed ? g.win : g.lose;
-});
+// Na výsledkovke sa hráč pýta jedno: vyhral som? Hláška konkrétnej hry
+// („ČISTÁ LINKA") patrí do hry, kde na ňu vidí ťah; tu by zneli ako hádanka.
+const resultHeadline = computed(() =>
+  state.summary?.passed ? COPY.result.win : COPY.result.lose);
 // hodnotu si určuje hra — každá meria niečo iné
 const resultValue = computed(() =>
   last.value?.value ?? (last.value ? String(Math.round(last.value.score * 100)) : undefined));

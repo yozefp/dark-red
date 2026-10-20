@@ -150,7 +150,7 @@ export function createMemorizeGame(): GameModule {
    */
   function flash(ok: boolean) {
     const c = COPY.games.memorize;
-    flashEl.textContent = ok ? c.stepOk : c.stepBad;
+    flashEl.textContent = ok ? c.flashOk : c.flashBad;
     flashEl.className = `memo__flash on ${ok ? 'ok' : 'bad'}`;
   }
 
@@ -182,8 +182,8 @@ export function createMemorizeGame(): GameModule {
     // jas sa tu nenuluje — posledné ťuknutie dosvieti až do výsledku
     paintStatus();
     stage.setHint(passed
-      ? `<b style="color:var(--amber)">${COPY.games.memorize.win} — ${seq.length} krokov</b>`
-      : `<b style="color:var(--red)">${COPY.games.memorize.lose}</b>`);
+      ? `<b style="color:var(--amber)">${COPY.games.memorize.roundWin} — ${COPY.misc.steps(seq.length)}</b>`
+      : `<b style="color:var(--red)">${COPY.games.memorize.roundLose}</b>`);
 
     const r: RoundResult = {
       round: round.round,
@@ -191,7 +191,7 @@ export function createMemorizeGame(): GameModule {
       score,
       value: String(passed ? seq.length : Math.max(0, got.length - 1)),
       unit: `/ ${seq.length}`,
-      detail: passed ? undefined : `pomýlil si sa pri ${got.length}. kroku`,
+      detail: passed ? undefined : `chyba pri ${got.length}. kroku`,
       visual: { game: 'memorize', seq: [...seq], got: [...got] },
     };
     self.onRoundEnd?.(r);

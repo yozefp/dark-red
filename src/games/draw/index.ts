@@ -123,8 +123,8 @@ export function createDrawGame(): GameModule {
     renderer.renderFinal(passed);
     const pct = Math.round(score.score * 100);
     stage.setHint(passed
-      ? `<b style="color:${C.amber}">${COPY.games.draw.win} — ${pct} %</b>`
-      : `<b style="color:${C.red}">${COPY.games.draw.lose} — ${pct} %</b>`);
+      ? `<b style="color:${C.amber}">${COPY.games.draw.roundWin} — ${pct} %</b>`
+      : `<b style="color:${C.red}">${COPY.games.draw.roundLose} — ${pct} %</b>`);
 
     const r: RoundResult = {
       round: round.round,
@@ -151,7 +151,7 @@ export function createDrawGame(): GameModule {
 
 /** Konkrétna spätná väzba namiesto „nepodarilo sa". */
 function reason(s: DrawScore, cfg: DrawConfig): string {
-  if (s.penalty > 0.05) return `vybočil si — trest ${Math.round(s.penalty * 100)} %`;
-  if (s.coverage < 0.95) return 'nedokončil si celý tvar';
-  return `drž sa bližšie k línii — chýbalo ${Math.round((cfg.pass - s.score) * 100)} %`;
+  if (s.penalty > 0.05) return `ťah vybočil — trest ${Math.round(s.penalty * 100)} %`;
+  if (s.coverage < 0.95) return 'tvar nebol dokreslený do konca';
+  return `k línii chýbalo ${Math.round((cfg.pass - s.score) * 100)} %`;
 }

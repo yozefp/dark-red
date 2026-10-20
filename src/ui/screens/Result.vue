@@ -48,7 +48,6 @@ onMounted(() => {
           {{ value }}<small v-if="unit">{{ unit }}</small>
         </div>
         <p class="body res__body">{{ won ? COPY.result.winBody : COPY.result.loseBody }}</p>
-        <p v-if="!won" class="note">{{ COPY.result.loseNote }}</p>
         <p v-if="detail" class="note res__detail">{{ detail }}</p>
         <p v-if="!won && visual?.game === 'memorize'" class="note res__legend">
           <span class="sw sw--red" />tvoj výber
