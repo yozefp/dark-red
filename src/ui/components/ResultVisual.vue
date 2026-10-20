@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
 import { samplePath, VIEW } from '@/games/draw/geometry';
-import {
-  ANGLES, LEN_OF_FRAME, DRAW_ORDER, FLOWER, PETAL_LEN, petalPolygon,
-} from '@/games/memorize/geometry';
+import { layoutFlower, drawFlower } from '@/games/memorize/draw';
 import { C } from '@/ui/tokens';
 import type { ResultVisual } from '@/core/types';
 
@@ -59,7 +57,7 @@ onMounted(() => {
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
     if (props.visual.game === 'draw') drawShape(ctx, vh, k);
-    else if (props.visual.game === 'memorize') drawFlower(ctx, vh, k);
+    else if (props.visual.game === 'memorize') drawFlowerResult(ctx, vh, k);
     else drawTarget(ctx, vh, k);
 
     if (k < 1) raf = requestAnimationFrame(tick);
@@ -99,45 +97,17 @@ function drawShape(ctx: CanvasRenderingContext2D, vh: number, k: number) {
 }
 
 /** MEMORIZE — kvet rozsvietený, alebo s vyznačenou chybou. */
-function drawFlower(ctx: CanvasRenderingContext2D, vh: number, k: number) {
+function drawFlowerResult(ctx: CanvasRenderingContext2D, vh: number, k: number) {
   const v = props.visual;
   if (v.game !== 'memorize') return;
-  // rovnaké usadenie ako v hre: podľa skutočných rozmerov kvetu
-  const fit = PETAL_LEN / Math.max(FLOWER.width / VIEW, FLOWER.height / vh);
-  const len = Math.min(vh * LEN_OF_FRAME, fit * 0.96);
-  const u = len / PETAL_LEN;
-  const cx = (VIEW - FLOWER.width * u) / 2 - FLOWER.left * u;
-  const cy = (vh - FLOWER.height * u) / 2 - FLOWER.up * u;
-  const petals = ANGLES.map((a) => petalPolygon(cx, cy, a, len));
+  const petals = layoutFlower(VIEW, vh);
 
-  const wrongAt = v.got.length - 1;
-  const chosen = props.won ? -1 : v.got[wrongAt];
-  const expected = props.won ? -1 : v.seq[wrongAt];
-
-  for (const i of DRAW_ORDER) {
-    const poly = petals[i];
-    ctx.beginPath();
-    poly.forEach((p, j) => (j ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-    ctx.closePath();
-
-    if (props.won) {
-      ctx.save();
-      ctx.shadowColor = C.orange; ctx.shadowBlur = 40 * k;
-      ctx.fillStyle = `rgba(255,90,31,${0.25 + 0.65 * k})`;
-      ctx.fill(); ctx.restore();
-      ctx.strokeStyle = C.orange;
-    } else if (i === chosen) {
-      ctx.fillStyle = 'rgba(224,42,38,.45)'; ctx.fill();
-      ctx.strokeStyle = C.red;
-    } else if (i === expected) {
-      ctx.fillStyle = 'rgba(232,163,61,.14)'; ctx.fill();
-      ctx.strokeStyle = C.amber;
-    } else {
-      ctx.fillStyle = '#2E1512'; ctx.fill();
-      ctx.strokeStyle = '#8A4036';
-    }
-    ctx.lineWidth = 2; ctx.stroke();
+  if (props.won) {
+    drawFlower(ctx, petals, [k, k, k, k]);
+    return;
   }
+  const at = v.got.length - 1;
+  drawFlower(ctx, petals, [0, 0, 0, 0], { wrong: v.got[at], expected: v.seq[at] });
 }
 
 /** RELEASE — terč a na ňom všetky tri hody. */

@@ -76,6 +76,19 @@ test.describe('MEMORIZE', () => {
       window.__tdr.replay(s.map((i: number) => ({ x: i, y: 0, t: 0 })));
     }, seq);
 
+    // posledné ťuknutie musí ostať svietiť — bez toho hráč nevidí, že trafil
+    await page.waitForTimeout(260);
+    const svieti = await page.evaluate(() => {
+      const c = document.querySelector('canvas') as HTMLCanvasElement;
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let k = 0; k < d.length; k += 4 * 97) {
+        if (d[k] > 200 && d[k + 1] > 70 && d[k + 1] < 170) n++;
+      }
+      return n;
+    });
+    expect(svieti).toBeGreaterThan(50);
+
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('[data-t="result"]')).toContainText('obsluhe');
   });

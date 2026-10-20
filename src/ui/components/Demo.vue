@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue';
 import { samplePath } from '@/games/draw/geometry';
-import { ANGLES, petalPolygon } from '@/games/memorize/geometry';
+import { layoutFlower, stepGlow, drawFlower } from '@/games/memorize/draw';
 import { C } from '@/ui/tokens';
 import type { GameId } from '@/core/types';
 
@@ -34,11 +34,16 @@ onMounted(() => {
   window.addEventListener('resize', fit);
 
   const path = samplePath(V / 2, V / 2, V * 0.37, 160);
-  const petals = ANGLES.map((a) => petalPolygon(V / 2, V / 2, a, V * 0.42));
+  const petals = layoutFlower(V, V);
+  const glow = [0, 0, 0, 0];
+  const target = [0, 0, 0, 0];
   const t0 = performance.now();
+  let last = t0;
 
   const tick = (now: number) => {
     const k = ((now - t0) % LOOP) / LOOP;          // 0..1 v cykle
+    const dt = Math.min(now - last, 60);
+    last = now;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, el.width, el.height);
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -46,7 +51,7 @@ onMounted(() => {
 
     if (props.game === 'draw') drawDemo(ctx, path, k);
     else if (props.game === 'push') pushDemo(ctx, k);
-    else if (props.game === 'memorize') memoDemo(ctx, petals, k);
+    else if (props.game === 'memorize') memoDemo(ctx, petals, glow, target, k, dt);
     else releaseDemo(ctx, k);
 
     raf = requestAnimationFrame(tick);
@@ -118,22 +123,30 @@ function pushDemo(ctx: CanvasRenderingContext2D, k: number) {
   ctx.fillText(`${Math.round(value)} %`, x + w + 18, V * 0.52);
 }
 
-/** Lupene sa rozsvietia za sebou, potom ich hráč zopakuje. */
-function memoDemo(ctx: CanvasRenderingContext2D, petals: { x: number; y: number }[][], k: number) {
+/**
+ * Lupene sa rozsvietia za sebou, potom ich hráč zopakuje.
+ * Kreslí sa tým istým kódom ako v hre, takže ukážka vyzerá ako hra —
+ * vrátane plynulého nábehu a dozvuku.
+ */
+function memoDemo(
+  ctx: CanvasRenderingContext2D,
+  petals: { x: number; y: number }[][],
+  glow: number[],
+  target: number[],
+  k: number,
+  dt: number,
+) {
   const seq = [1, 3, 0];
-  const step = Math.floor(k * 6);                 // tri záblesky, potom tri ťuknutia
-  const lit = step < 6 ? seq[step % 3] : -1;
+  // šesť krokov: tri záblesky ukážky, potom tie isté tri ako ťuknutia
+  const step = Math.floor(k * 6);
+  const vKroku = (k * 6) % 1;
+  const lit = seq[step % 3];
 
-  petals.forEach((poly, i) => {
-    ctx.beginPath();
-    poly.forEach((p, j) => (j ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-    ctx.closePath();
-    const on = i === lit;
-    ctx.fillStyle = on ? 'rgba(255,90,31,.9)' : '#21100E';
-    ctx.fill();
-    ctx.strokeStyle = on ? C.orange : '#52231F';
-    ctx.lineWidth = 1.5; ctx.stroke();
-  });
+  for (let i = 0; i < target.length; i++) target[i] = 0;
+  if (vKroku < 0.62) target[lit] = 1;             // svieti len časť kroku
+  stepGlow(glow, target, dt);
+
+  drawFlower(ctx, petals, glow);
 }
 
 /** Potiahnutie dozadu, bodkovaný smer, let a zásah. */
