@@ -1,7 +1,7 @@
 import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
 import { attachPointer } from '@/core/input';
 import { createStage, type Stage, type Point } from '../shell';
-import { ANGLES, petalPolygon, hitPetal } from './geometry';
+import { ANGLES, ORIGIN_Y, petalPolygon, hitPetal } from './geometry';
 import { configFor, makeSequence, judge, seeded, type MemoConfig } from './sequence';
 import { COPY } from '@/ui/copy';
 import { C } from '@/ui/tokens';
@@ -72,8 +72,9 @@ export function createMemorizeGame(): GameModule {
   }
 
   function layout() {
-    const cx = stage.vw / 2, cy = stage.vh / 2;
-    const r = Math.min(stage.vw, stage.vh) * 0.47;
+    const cx = stage.vw / 2, cy = stage.vh * ORIGIN_Y;
+    // dĺžka lupeňa tak, aby sa vejár zmestil nahor aj do strán
+    const r = Math.min(cy * 0.92, stage.vw * 0.46);
     petals = ANGLES.map((a) => petalPolygon(cx, cy, a, r));
   }
 
@@ -176,11 +177,11 @@ export function createMemorizeGame(): GameModule {
         ctx.fill();
         ctx.restore();
       } else {
-        ctx.fillStyle = '#21100E';
+        ctx.fillStyle = '#2E1512';
         ctx.fill();
       }
-      ctx.strokeStyle = g > 0.01 ? C.orange : '#52231F';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = g > 0.01 ? C.orange : '#8A4036';
+      ctx.lineWidth = 2;
       ctx.stroke();
 
       // dohasínanie beží v čase, nie na snímok — rovnaké na každom tablete

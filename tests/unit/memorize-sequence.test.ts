@@ -54,33 +54,45 @@ describe('MEMORIZE — poradie', () => {
 
 import { petalPolygon, pointInPolygon, hitPetal, ANGLES } from '@/games/memorize/geometry';
 
-const petals = ANGLES.map((a) => petalPolygon(300, 300, a, 230));
+const R = 230;
+const petals = ANGLES.map((a) => petalPolygon(300, 300, a, R));
+/** bod na osi lupeňa v danom podiele jeho dĺžky */
+const onAxis = (i: number, t: number) => {
+  const a = (ANGLES[i] * Math.PI) / 180;
+  return { x: 300 + Math.cos(a) * R * t, y: 300 + Math.sin(a) * R * t };
+};
 
 describe('MEMORIZE — lupene', () => {
-  it('bod v strede lupeňa je zásah, bod za špicom nie', () => {
-    const mid = { x: 300 + Math.cos((-45 * Math.PI) / 180) * 115,
-                  y: 300 + Math.sin((-45 * Math.PI) / 180) * 115 };
-    expect(hitPetal(mid, petals)).toBe(1);
-    expect(hitPetal({ x: 595, y: 5 }, petals)).toBe(-1);
+  it('bod na osi lupeňa je zásah, bod mimo kvetu nie', () => {
+    expect(hitPetal(onAxis(1, 0.5), petals)).toBe(1);
+    expect(hitPetal({ x: 300, y: 595 }, petals)).toBe(-1);
   });
 
-  it('každý lupeň sa dá trafiť a vždy len jeden', () => {
-    ANGLES.forEach((deg, i) => {
-      const a = (deg * Math.PI) / 180;
-      const p = { x: 300 + Math.cos(a) * 120, y: 300 + Math.sin(a) * 120 };
+  it('špicu každého lupeňa možno trafiť jednoznačne', () => {
+    // špica trčí z vejára von, takže tam žiadne prekrytie nie je
+    ANGLES.forEach((_, i) => {
+      const p = onAxis(i, 0.85);
       expect(hitPetal(p, petals)).toBe(i);
+      expect(petals.filter((poly) => pointInPolygon(p, poly))).toHaveLength(1);
     });
   });
 
-  it('lupene sa navzájom neprekrývajú', () => {
-    // spoločný stred vynechávame — tam sa tvary stretávajú zámerne
-    for (let i = 0; i < petals.length; i++) {
-      const others = petals.filter((_, j) => j !== i);
-      for (const p of petals[i]) {
-        if (Math.hypot(p.x - 300, p.y - 300) < 10) continue;
-        expect(hitPetal(p, others)).toBe(-1);
-      }
+  it('v prekrytí vyhráva lupeň navrchu, teda ten kreslený neskôr', () => {
+    // vo vejári sa susedia prekrývajú zámerne — hráč musí trafiť to,
+    // čo vidí, a navrchu je vždy ten s vyšším indexom
+    const sporne = petals.flatMap((poly, i) =>
+      poly.map((p) => ({ p, i })).filter(({ p }) =>
+        petals.filter((q) => pointInPolygon(p, q)).length > 1));
+    expect(sporne.length).toBeGreaterThan(0);
+    for (const { p } of sporne) {
+      const vsetky = petals.map((q, j) => (pointInPolygon(p, q) ? j : -1)).filter((j) => j >= 0);
+      expect(hitPetal(p, petals)).toBe(Math.max(...vsetky));
     }
+  });
+
+  it('vejár mieri nahor a do strán, nie dole', () => {
+    // dole býva ruka — lupeň by si tam hráč zakrýval
+    for (const a of ANGLES) expect(Math.sin((a * Math.PI) / 180)).toBeLessThan(0);
   });
 
   it('tvar je uzavretý a má šírku', () => {

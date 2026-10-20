@@ -1,7 +1,14 @@
 import type { Point } from '../shell';
 
-/** Lupene sú rozložené do kríža — žiadny nemieri kolmo dole, kde býva ruka. */
-export const ANGLES = [-135, -45, 45, 135];
+/**
+ * Lupene vejárom ako lotos — tak sú na schválenej obrazovke.
+ * Vejár sa rozprestiera nahor a do strán, dole nemieri žiadny:
+ * tam býva ruka a zakrývala by si vlastný cieľ.
+ */
+export const ANGLES = [-158, -122, -58, -22];
+
+/** Stred kvetu nesedí v strede plochy — lupene z neho vybiehajú nahor. */
+export const ORIGIN_Y = 0.78;
 
 /** Tvar obálky lupeňa: najširší je v 58 % dĺžky, nie v polovici. */
 const PEAK_A = 1.4;
@@ -15,7 +22,7 @@ const BULGE_NORM =
  * a zásah prsta sa počíta tou istou geometriou, akú hráč vidí.
  */
 export function petalPolygon(
-  cx: number, cy: number, angleDeg: number, r: number, width = 0.30, n = 34,
+  cx: number, cy: number, angleDeg: number, r: number, width = 0.31, n = 34,
 ): Point[] {
   const a = (angleDeg * Math.PI) / 180;
   const dir = { x: Math.cos(a), y: Math.sin(a) };
@@ -24,9 +31,8 @@ export function petalPolygon(
 
   const at = (t: number, side: 1 | -1): Point => {
     // Obálka listu: špicatá v strede kvetu aj na konci, najširšia za
-    // polovicou dĺžky. Šírka je zvolená tak, aby tvar nikde nepresiahol
-    // 34° od vlastnej osi — lupene sú po 90°, takže sa nikde neprekryjú
-    // a ťuknutie patrí vždy práve jednému. Overuje to test.
+    // polovicou dĺžky. Lupene sa vo vejári prekrývajú, tak ako v dizajne —
+    // o tom, komu ťuknutie patrí, preto rozhoduje poradie vykresľovania.
     const bulge = (t ** PEAK_A * (1 - t) ** PEAK_B) / BULGE_NORM;
     const d = r * t;
     return {
@@ -54,8 +60,13 @@ export function pointInPolygon(p: Point, poly: Point[]): boolean {
   return inside;
 }
 
-/** Ktorý lupeň hráč trafil, alebo -1. */
+/**
+ * Ktorý lupeň hráč trafil, alebo -1.
+ * Vo vejári sa lupene prekrývajú, takže vyhráva ten, ktorý je navrchu —
+ * teda ten, ktorý sa kreslí ako posledný. Hráč tak vždy trafí to,
+ * na čo sa pozerá.
+ */
 export function hitPetal(p: Point, petals: Point[][]): number {
-  for (let i = 0; i < petals.length; i++) if (pointInPolygon(p, petals[i])) return i;
+  for (let i = petals.length - 1; i >= 0; i--) if (pointInPolygon(p, petals[i])) return i;
   return -1;
 }
