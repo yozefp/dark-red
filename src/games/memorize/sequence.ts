@@ -8,8 +8,8 @@ export const PETALS = 4;
 /** Dĺžka poradia po kolách. */
 export const DIFFICULTY: Record<string, number[]> = {
   easy:     [3, 4, 5],
-  standard: [4, 5, 6],
-  hard:     [5, 6, 7],
+  standard: [3, 5, 6],
+  hard:     [4, 6, 7],
 };
 
 export interface MemoConfig {

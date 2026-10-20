@@ -15,9 +15,9 @@ export const MM_PER_UNIT = 0.42;
 
 /** Povolená vzdialenosť od stredu (vnútorné jednotky), po kolách. */
 export const DIFFICULTY: Record<string, number[]> = {
-  easy:     [34, 28, 24],
-  standard: [26, 21, 17],
-  hard:     [19, 15, 12],
+  easy:     [44, 32, 26],
+  standard: [36, 25, 19],
+  hard:     [26, 18, 14],
 };
 
 export interface ReleaseConfig {
@@ -34,7 +34,9 @@ export function configFor(difficulty: string, round: number): ReleaseConfig {
   const t = DIFFICULTY[difficulty] ?? DIFFICULTY.standard;
   return {
     tolerance: t[Math.min(round, t.length) - 1],
-    maxPull: 190,
+    // Strop ťahu určuje, kde sa zastaví pruh SILA. Pri 190 sa správny hod
+    // zastavil na 43 % a vyzeralo to, akoby hráč ťahal slabo, hoci trafil.
+    maxPull: 125,
     rangeK: 2.35,
     throws: THROWS,
   };

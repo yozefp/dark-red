@@ -41,7 +41,7 @@ function check() {
     <Header />
     <div class="split code">
       <div class="split__text">
-        <h1 class="h1">{{ COPY.code.headline }}</h1>
+        <h1 class="h1 h1--tight">{{ COPY.code.headline }}</h1>
         <p class="body code__hint">{{ COPY.code.hint }}</p>
         <div class="code__cells" :class="{ wrong, accepted }">
           <div v-for="(c, i) in cells" :key="i" class="code__cell" :class="{ cursor: c.cursor }">

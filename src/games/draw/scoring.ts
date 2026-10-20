@@ -19,10 +19,16 @@ export interface DrawConfig {
   penalty: number;
 }
 
+/**
+ * Tolerancia v jednotkách siete 600×600, po kolách.
+ * Prvé kolo musí vyhrať takmer každý — kto príde k tabletu a hneď prehrá,
+ * odíde a druhýkrát to neskúsi. Hodnoty sú overené maticou syntetických
+ * ťahov: prvé kolo prejde aj s chvením 30 px, tretie potrebuje asi 15 px.
+ */
 export const DIFFICULTY: Record<string, number[]> = {
-  easy:     [34, 26, 20],
-  standard: [26, 18, 12],
-  hard:     [20, 13, 9],
+  easy:     [52, 37, 26],
+  standard: [42, 29, 20],
+  hard:     [33, 23, 16],
 };
 
 export interface DrawScore {

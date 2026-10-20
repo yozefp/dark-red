@@ -12,9 +12,9 @@ export const BURN = 120;
 
 /** Polovičná šírka cieľového pásma v percentách, po kolách. */
 export const DIFFICULTY: Record<string, number[]> = {
-  easy:     [6.0, 5.0, 4.0],
-  standard: [4.5, 3.5, 2.5],
-  hard:     [3.0, 2.2, 1.6],
+  easy:     [8.0, 6.0, 4.5],
+  standard: [6.5, 4.5, 3.0],
+  hard:     [4.5, 3.0, 2.0],
 };
 
 export interface PushConfig {
