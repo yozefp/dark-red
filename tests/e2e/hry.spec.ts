@@ -76,18 +76,25 @@ test.describe('MEMORIZE', () => {
       window.__tdr.replay(s.map((i: number) => ({ x: i, y: 0, t: 0 })));
     }, seq);
 
-    // posledné ťuknutie musí ostať svietiť — bez toho hráč nevidí, že trafil
-    await page.waitForTimeout(260);
-    const svieti = await page.evaluate(() => {
+    // Jas sa meria, keď je záblesk nabehnutý — hneď po ťuknutí je ešte
+    // na nule, lebo nábeh beží až v ďalšom snímku.
+    const jas = () => page.evaluate(() => {
       const c = document.querySelector('canvas') as HTMLCanvasElement;
       const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
-      let n = 0;
-      for (let k = 0; k < d.length; k += 4 * 97) {
-        if (d[k] > 200 && d[k + 1] > 70 && d[k + 1] < 170) n++;
-      }
-      return n;
+      let sum = 0, n = 0;
+      for (let k = 0; k < d.length; k += 4 * 53) { sum += d[k]; n++; }
+      return sum / n;
     });
-    expect(svieti).toBeGreaterThan(50);
+    await page.waitForTimeout(160);
+    const hned = await jas();
+
+    // odpoveď dáva stavový riadok, nie lupeň: všetky kroky musia byť splnené
+    await expect(page.locator('.g__status .dot--done')).toHaveCount(seq.length);
+    await expect(page.locator('.g__status .dot--bad')).toHaveCount(0);
+
+    // posledné ťuknutie nesmie ostať svietiť — blikne a zhasne ako každé iné
+    await page.waitForTimeout(700);
+    expect(await jas()).toBeLessThan(hned * 0.6);
 
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('[data-t="result"]')).toContainText('obsluhe');
@@ -103,6 +110,9 @@ test.describe('MEMORIZE', () => {
     await page.evaluate((wrong) => {
       window.__tdr.replay([{ x: wrong, y: 0, t: 0 }]);
     }, (seq[0] + 1) % 4);
+
+    // chybný krok sa musí okamžite ukázať v stavovom riadku
+    await expect(page.locator('.g__status .dot--bad')).toHaveCount(1);
 
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('[data-t="result"]')).toContainText(/nevyšlo/i);

@@ -3,6 +3,7 @@ import { attachPointer } from '@/core/input';
 import { createStage, type Stage, type Point } from '../shell';
 import { hitPetal } from './geometry';
 import { layoutFlower, stepGlow, drawFlower } from './draw';
+import type { StepMark } from '../shell';
 import { configFor, makeSequence, judge, seeded, type MemoConfig } from './sequence';
 import { COPY } from '@/ui/copy';
 
@@ -22,6 +23,10 @@ export function createMemorizeGame(): GameModule {
   let seq: number[] = [];
   let got: number[] = [];
   let phase: Phase = 'intro';
+  /** ktorý krok ukážky práve beží — pre bodky v stavovom riadku */
+  let shown = 0;
+  /** krok, pri ktorom sa hráč pomýlil, alebo -1 */
+  let badStep = -1;
   /** 0..1 jas každého lupeňa — plynule sa blíži k cieľu, nie skokom */
   let glow = [0, 0, 0, 0];
   /** kam jas smeruje: 1 kým lupeň svieti, inak 0 */
@@ -83,10 +88,11 @@ export function createMemorizeGame(): GameModule {
   /** Ukážka poradia. Tempo je v konfigurácii, nie v kóde hry. */
   function playback() {
     phase = 'watch';
+    shown = 0;
     paintStatus();
     let t = 0;
     seq.forEach((i, k) => {
-      after(t, () => { target[i] = 1; });
+      after(t, () => { target[i] = 1; shown = k; paintStatus(); });
       after(t + cfg.flashMs, () => {
         target[i] = 0;
         if (k === seq.length - 1) toInput();
@@ -113,34 +119,49 @@ export function createMemorizeGame(): GameModule {
     target[i] = 1;
     got.push(i);
 
+    // každé ťuknutie blikne rovnako, aj to posledné
+    after(220, () => { target[i] = 0; });
+
     const j = judge(seq, got);
     if (j.failed || j.done) {
-      if (j.failed) wrong = i;
-      // Ďalšie ťuknutia už neberieme, ale kolo ukončíme až o chvíľu:
-      // posledné ťuknutie musí ostať svietiť, inak hráč nevidí, že trafil.
+      if (j.failed) { wrong = i; badStep = got.length - 1; }
+      // Ďalšie ťuknutia už neberieme, ale kolo ukončíme až o chvíľu,
+      // nech odpoveď v bodkách aj záblesk stihne hráč zachytiť.
       phase = 'done';
-      after(460, () => finish(j.score, j.done));
+      paintStatus();
+      after(520, () => finish(j.score, j.done));
       return;
     }
-
-    after(220, () => { target[i] = 0; });
     paintStatus();
   }
 
+  /**
+   * Bodky v stavovom riadku. Počas ukážky ukazujú, kde v poradí sme,
+   * počas zadávania dávajú okamžitú odpoveď na každý krok. Hráč to tak
+   * nemusí čítať z lupeňa a ten môže normálne bliknúť a zhasnúť.
+   */
   function paintStatus() {
     if (phase === 'watch') {
-      stage.setStatus(COPY.games.memorize.watch, `${seq.length}`);
-    } else if (phase === 'input') {
-      stage.setStatus(COPY.games.memorize.yourTurn, `${got.length} / ${seq.length}`);
+      const steps = seq.map((_, k): StepMark =>
+        k < shown ? 'done' : k === shown ? 'now' : 'todo');
+      stage.setSteps(COPY.games.memorize.watch, steps);
+      return;
     }
+    const steps = seq.map((_, k): StepMark => {
+      if (k === badStep) return 'bad';
+      if (k < got.length) return 'done';
+      if (k === got.length && phase === 'input') return 'now';
+      return 'todo';
+    });
+    // po ukážke už popis ostáva „teraz ty" aj počas vyhodnotenia kroku
+    stage.setSteps(COPY.games.memorize.yourTurn, steps);
   }
 
   function finish(score: number, passed: boolean) {
     phase = 'done';
     timers.forEach(clearTimeout);
     // jas sa tu nenuluje — posledné ťuknutie dosvieti až do výsledku
-    stage.setStatus(passed ? COPY.games.memorize.win : COPY.games.memorize.lose,
-                    `${got.length - (passed ? 0 : 1)} / ${seq.length}`, !passed);
+    paintStatus();
     stage.setHint(passed
       ? `<b style="color:var(--amber)">${COPY.games.memorize.win} — ${seq.length} krokov</b>`
       : `<b style="color:var(--red)">${COPY.games.memorize.lose}</b>`);

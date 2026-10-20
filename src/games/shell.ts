@@ -7,10 +7,19 @@ export const VIEW = 600;
 export interface Point { x: number; y: number }
 
 /** Spoločná kostra: stavový riadok hore, plocha hry, nápoveda dole. */
+/** Stav jedného kroku v stavovom riadku. */
+export type StepMark = 'done' | 'now' | 'todo' | 'bad';
+
 export interface Shell {
   /** voľná plocha, do ktorej si hra postaví, čo potrebuje */
   area: HTMLElement;
   setStatus(label: string, value?: string, off?: boolean): void;
+  /**
+   * Stavový riadok s bodkami namiesto čísla — postup po krokoch.
+   * Hráč tak hneď vidí, či bol krok správny, bez toho aby sa to muselo
+   * čítať z lupeňa.
+   */
+  setSteps(label: string, steps: ReadonlyArray<StepMark>): void;
   setHint(html: string): void;
   destroy(): void;
 }
@@ -34,6 +43,14 @@ export function createShell(root: HTMLElement): Shell {
         ? `<span class="lbl off">${label}</span>`
         : `<span class="lbl">${label}</span>${value ? `<span class="val">${value}</span>` : ''}`;
     },
+    setSteps(label, steps) {
+      const dots = steps
+        .map((m) => `<span class="dot dot--${m}"></span>`)
+        .join('');
+      statusEl.innerHTML =
+        `<span class="lbl">${label}</span><span class="dots">${dots}</span>`;
+    },
+
     setHint(html) { hintEl.innerHTML = html; },
     destroy() { root.innerHTML = ''; },
   };

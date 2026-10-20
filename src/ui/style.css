@@ -91,6 +91,15 @@ html,body{
 .dot{width:6px;height:6px;border-radius:50%;background:var(--line)}
 .dot--on{background:var(--amber)}
 
+/* bodky v stavovom riadku hry — okamžitá spätná väzba na krok */
+.g__status .dots{margin:0;gap:clamp(7px,1vw,13px);align-items:center}
+.g__status .dot{width:clamp(7px,.95vw,11px);height:clamp(7px,.95vw,11px);
+  box-sizing:border-box;transition:background .18s,border-color .18s,transform .18s}
+.g__status .dot--todo{background:none;border:1.5px solid rgba(232,163,61,.55)}
+.g__status .dot--done{background:var(--amber)}
+.g__status .dot--now{background:#F6DFA8;transform:scale(1.15)}
+.g__status .dot--bad{background:var(--red);transform:scale(1.15)}
+
 .glow{position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse at 50% 50%, rgba(255,90,31,.13), transparent 62%)}
 
