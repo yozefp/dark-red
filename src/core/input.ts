@@ -3,6 +3,10 @@
  *
  * Pointer Events pribudli až v Safari 13 — na starších iPadoch ich niet.
  * Ostatok aplikácie pracuje výhradne s typom Sample a o tomto nevie.
+ *
+ * Hra sleduje vždy len jeden prst — ten, ktorý sa dotkol ako prvý.
+ * V predajni sa ľudia o obrazovku opierajú a bez toho by položená dlaň
+ * prerušila ťah v DRAW alebo pustila meter v PUSH, hoci prvý prst drží ďalej.
  */
 export interface Sample {
   x: number;
@@ -26,17 +30,27 @@ export function attachPointer(el: HTMLElement, src: PointerSource): () => void {
     return { x: cx - r.left, y: cy - r.top, t };
   };
 
+  /** id prsta, ktorý hru práve ovláda; ostatné dotyky sa ignorujú */
+  let active: number | null = null;
+
   if (hasPointer) {
     const down = (e: PointerEvent) => {
+      if (active !== null) return;
+      active = e.pointerId;
       el.setPointerCapture?.(e.pointerId);
       src.onDown(toSample(e.clientX, e.clientY, e.timeStamp), e.target);
     };
     const move = (e: PointerEvent) => {
+      if (e.pointerId !== active) return;
       // bez coalesced vypadávajú body pri rýchlom ťahu a skóre je nespravodlivé
       const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
       src.onMove(evs.map((ev) => toSample(ev.clientX, ev.clientY, ev.timeStamp)));
     };
-    const up = (e: PointerEvent) => src.onUp(toSample(e.clientX, e.clientY, e.timeStamp));
+    const up = (e: PointerEvent) => {
+      if (e.pointerId !== active) return;
+      active = null;
+      src.onUp(toSample(e.clientX, e.clientY, e.timeStamp));
+    };
     el.addEventListener('pointerdown', down);
     el.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -49,29 +63,39 @@ export function attachPointer(el: HTMLElement, src: PointerSource): () => void {
     };
   }
 
-  const first = (e: TouchEvent) => e.changedTouches[0];
+  /** nájde medzi dotykmi ten, ktorý hru ovláda */
+  const mine = (e: TouchEvent) => {
+    for (const t of Array.from(e.changedTouches)) if (t.identifier === active) return t;
+    return null;
+  };
   const down = (e: TouchEvent) => {
     e.preventDefault();
-    const t = first(e);
+    if (active !== null) return;
+    const t = e.changedTouches[0];
+    active = t.identifier;
     src.onDown(toSample(t.clientX, t.clientY, e.timeStamp), document.elementFromPoint(t.clientX, t.clientY));
   };
   const move = (e: TouchEvent) => {
     e.preventDefault();
-    const t = first(e);
-    src.onMove([toSample(t.clientX, t.clientY, e.timeStamp)]);
+    const t = mine(e);
+    if (t) src.onMove([toSample(t.clientX, t.clientY, e.timeStamp)]);
   };
   const up = (e: TouchEvent) => {
     e.preventDefault();
-    const t = first(e);
+    const t = mine(e);
+    if (!t) return;
+    active = null;
     src.onUp(toSample(t.clientX, t.clientY, e.timeStamp));
   };
   el.addEventListener('touchstart', down, { passive: false });
   el.addEventListener('touchmove', move, { passive: false });
   window.addEventListener('touchend', up, { passive: false });
+  window.addEventListener('touchcancel', up, { passive: false });
   return () => {
     el.removeEventListener('touchstart', down);
     el.removeEventListener('touchmove', move);
     window.removeEventListener('touchend', up);
+    window.removeEventListener('touchcancel', up);
   };
 }
 
