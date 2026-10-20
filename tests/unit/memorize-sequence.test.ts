@@ -58,25 +58,43 @@ import {
 
 const R = 230;
 const petals = ANGLES.map((a) => petalPolygon(300, 300, a, R));
-/** bod na osi lupeňa v danom podiele jeho dĺžky */
-const onAxis = (i: number, t: number) => {
-  const a = (ANGLES[i] * Math.PI) / 180;
-  return { x: 300 + Math.cos(a) * R * t, y: 300 + Math.sin(a) * R * t };
-};
+/** ťažisko mnohouholníka — bod, ktorý v tvare určite leží */
+const tezisko = (poly: { x: number; y: number }[]) => ({
+  x: poly.reduce((s, p) => s + p.x, 0) / poly.length,
+  y: poly.reduce((s, p) => s + p.y, 0) / poly.length,
+});
 
 describe('MEMORIZE — lupene', () => {
-  it('bod na osi lupeňa je zásah, bod mimo kvetu nie', () => {
-    expect(hitPetal(onAxis(1, 0.5), petals)).toBe(1);
-    expect(hitPetal({ x: 300, y: 595 }, petals)).toBe(-1);
+  it('obrys je zmysluplný: dĺžka jedna, stopka v počiatku', () => {
+    // obrys je odmeraný z predlohy, takže test stráži, že sa nepokazil prenos
+    const p = petalPolygon(0, 0, 0, 100);
+    expect(p.length).toBeGreaterThan(40);
+    expect(Math.hypot(p[0].x, p[0].y)).toBeLessThan(1);
+    expect(Math.max(...p.map((q) => q.x))).toBeCloseTo(100, -1);
+    const sirka = Math.max(...p.map((q) => q.y)) - Math.min(...p.map((q) => q.y));
+    expect(sirka).toBeGreaterThan(40);
+    expect(sirka).toBeLessThan(80);
   });
 
-  it('špicu každého lupeňa možno trafiť jednoznačne', () => {
-    // špica trčí z vejára von, takže tam žiadne prekrytie nie je
-    ANGLES.forEach((_, i) => {
-      const p = onAxis(i, 0.85);
-      expect(hitPetal(p, petals)).toBe(i);
-      expect(petals.filter((poly) => pointInPolygon(p, poly))).toHaveLength(1);
+  it('lupeň je asymetrický — jedna hrana vypuklejšia než druhá', () => {
+    // z toho vzniká vrtuľový pohyb kvetu; súmerný list by vyzeral inak
+    const p = petalPolygon(0, 0, 0, 100);
+    const hore = Math.max(...p.map((q) => q.y));
+    const dole = -Math.min(...p.map((q) => q.y));
+    expect(Math.abs(hore - dole)).toBeGreaterThan(1.5);
+  });
+
+  it('každý lupeň sa dá trafiť a vždy len jeden', () => {
+    petals.forEach((poly, i) => {
+      const c = tezisko(poly);
+      expect(hitPetal(c, petals)).toBe(i);
+      expect(petals.filter((q) => pointInPolygon(c, q))).toHaveLength(1);
     });
+  });
+
+  it('bod mimo kvetu nie je zásah', () => {
+    expect(hitPetal({ x: 20, y: 20 }, petals)).toBe(-1);
+    expect(hitPetal({ x: 580, y: 580 }, petals)).toBe(-1);
   });
 
   it('lupene sa neprekrývajú, takže ťuknutie je jednoznačné', () => {
@@ -91,8 +109,8 @@ describe('MEMORIZE — lupene', () => {
   });
 
   it('keby sa tvary prekryli, vyhrá ten navrchu', () => {
-    // poistka pre prípad, že sa šírka lupeňa raz zväčší kvôli vizuálu
-    const siroke = ANGLES.map((a) => petalPolygon(300, 300, a, R, 0.95));
+    // poistka pre prípad, že sa lupene raz zámerne rozšíria kvôli vizuálu
+    const siroke = ANGLES.map((a) => petalPolygon(300, 300, a, R, 2.4));
     const vrstva = (i: number) => DRAW_ORDER.indexOf(i);
     const sporne = siroke.flatMap((poly) =>
       poly.filter((p) => siroke.filter((q) => pointInPolygon(p, q)).length > 1));
@@ -107,10 +125,11 @@ describe('MEMORIZE — lupene', () => {
   it('žiadny lupeň nemieri kolmo dole', () => {
     // dole býva ruka — taký lupeň by si hráč zakrýval
     for (const a of ANGLES) {
-      const odDola = Math.abs(((a % 360) + 360) % 360 - 90);
+      const odDola = Math.abs((((a % 360) + 360) % 360) - 90);
       expect(odDola).toBeGreaterThan(25);
     }
   });
+
 
   it('tvar je uzavretý a má šírku', () => {
     const poly = petalPolygon(0, 0, 0, 100);

@@ -18,49 +18,44 @@ export const ORIGIN_Y = 0.5;
 export const DRAW_ORDER = [0, 1, 2, 3];
 
 /**
- * Obálka lupeňa. Nula na oboch koncoch, takže list je zahrotený pri stopke
- * aj na špici — tak je to na schválenej obrazovke.
+ * Obrys lupeňa, odmeraný zo schválenej obrazovky.
  *
- * Dve rôzne obálky robia list asymetrický: vonkajšia hrana je vypuklejšia
- * než vnútorná. Z toho vzniká ten vrtuľový pohyb kvetu; symetrický list
- * by vyzeral ako list stromu, nie ako lupeň.
+ * Tvar sa nedal rozumne popísať vzorcom — je asymetrický a ostrý len pri
+ * stopke, takže každý pokus o krivku vyzeral inak než predloha. Body sú
+ * preto vytiahnuté priamo z nej: rozsvietený lupeň sa izoloval podľa farby,
+ * obrys sa doplnil o časť zakrytú susedom a znormalizoval tak, že stopka
+ * leží v počiatku a špica v [1, 0]. Mierku aj otočenie dodá až hra.
  */
-/** [mocnina pri stopke, mocnina pri špici, podiel šírky] pre vonkajšiu
- *  a vnútornú hranu. Vonkajšia je plnšia, vnútorná plochejšia. */
-const OUTER = [1.6, 1.0, 1.0] as const;
-const INNER = [2.1, 1.0, 0.58] as const;
-
-const shape = (t: number, a: number, c: number) => t ** a * (1 - t) ** c;
-/** vrchol obálky, aby najširšie miesto malo presne zadanú šírku */
-const peak = (a: number, c: number) => shape(a / (a + c), a, c);
+const LEAF: readonly (readonly [number, number])[] = [
+  [0.000,0.000], [0.035,-0.028], [0.070,-0.056], [0.106,-0.083],
+  [0.143,-0.108], [0.180,-0.133], [0.219,-0.156], [0.258,-0.178],
+  [0.298,-0.198], [0.338,-0.218], [0.379,-0.236], [0.421,-0.252],
+  [0.463,-0.267], [0.507,-0.279], [0.551,-0.284], [0.595,-0.279],
+  [0.638,-0.265], [0.679,-0.248], [0.720,-0.229], [0.761,-0.211],
+  [0.802,-0.193], [0.843,-0.174], [0.884,-0.156], [0.924,-0.136],
+  [0.961,-0.111], [0.986,-0.074], [0.996,-0.031], [0.998,0.014],
+  [0.996,0.059], [0.992,0.104], [0.985,0.148], [0.975,0.192],
+  [0.962,0.234], [0.939,0.273], [0.903,0.298], [0.859,0.310],
+  [0.815,0.315], [0.770,0.317], [0.725,0.316], [0.681,0.314],
+  [0.636,0.308], [0.592,0.301], [0.548,0.292], [0.504,0.281],
+  [0.461,0.268], [0.419,0.254], [0.377,0.238], [0.336,0.220],
+  [0.295,0.201], [0.256,0.180], [0.216,0.158], [0.178,0.135],
+  [0.140,0.111], [0.103,0.085], [0.067,0.059], [0.032,0.031],
+] as const;
 
 /**
- * Lupeň ako list: vybieha zo stredu, rozšíri sa a končí špicom.
- * Vracia mnohouholník, nie Path2D — tvar sa tým dá overiť testom
- * a zásah prsta sa počíta tou istou geometriou, akú hráč vidí.
+ * Lupeň v danom smere a veľkosti. Vracia mnohouholník, nie Path2D —
+ * zásah prsta sa tým počíta tou istou geometriou, akú hráč vidí.
  */
 export function petalPolygon(
-  cx: number, cy: number, angleDeg: number, r: number, width = 0.40, n = 44,
+  cx: number, cy: number, angleDeg: number, r: number, width = 1,
 ): Point[] {
   const a = (angleDeg * Math.PI) / 180;
-  const dir = { x: Math.cos(a), y: Math.sin(a) };
-  const per = { x: -Math.sin(a), y: Math.cos(a) };
-  const w = r * width;
-
-  const at = (t: number, side: 1 | -1): Point => {
-    const [a, c, k] = side === 1 ? OUTER : INNER;
-    const b = (shape(t, a, c) / peak(a, c)) * k;
-    const d = r * t;
-    return {
-      x: cx + dir.x * d + per.x * w * b * side,
-      y: cy + dir.y * d + per.y * w * b * side,
-    };
-  };
-
-  const out: Point[] = [];
-  for (let i = 0; i <= n; i++) out.push(at(i / n, 1));
-  for (let i = n - 1; i > 0; i--) out.push(at(i / n, -1));
-  return out;
+  const ca = Math.cos(a), sa = Math.sin(a);
+  return LEAF.map(([x, y]) => {
+    const px = x * r, py = y * r * width;
+    return { x: cx + px * ca - py * sa, y: cy + px * sa + py * ca };
+  });
 }
 
 /** Zásah lupeňa. Paprskový test — funguje aj na nekonvexnom tvare. */
