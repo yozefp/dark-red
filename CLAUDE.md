@@ -10,51 +10,54 @@ Píš po slovensky. Odhady drž triezve, rozsah nerozširuj.
 
 Funkčne hotové a otestované: celý priebeh (attract → kód → tutoriál → hra →
 výsledok), štyri hry, ladiaci panel, konfiguračný panel, offline vrstva.
-48 jednotkových a 36 E2E testov (WebKit + Chromium) prechádza.
+54 jednotkových a 42 E2E testov (WebKit + Chromium) prechádza.
 
-## Čo sa rieši teraz
+Lokálne: `npm run dev`, potom `http://localhost:5173/?debug=1&nocode=1`.
+Rozcestník všetkých hier je `http://localhost:5173/test.html`.
 
-**Hry nevyzerajú ako schválené obrazovky.** Schválené obrazovky sú
-`../ref-obrazovky/` (8 ks, hlavné) a `../ref-doplnkove/` (14 ks, výsledkovky
-a stavy; prehľad v `sheet.png`).
+## Hotové opravy (neriešiť znova)
 
-Hlavná príčina bola **typografická mierka** — všetko bolo zhruba o polovicu
-menšie, než má byť. Obrazovky z dizajnu sú 2000 px široké a veľkosti v nich
-sú proporčné: nadpis na úvodnej má výšku verzálky 7,6 % šírky obrazovky,
-telo textu 2 %. V kóde boli pevné pixely so stropom okolo 46 px.
-Opravené v `src/ui/style.css` — mierka je teraz vo `vw` premenných na
-`:root` (`--fs-hero`, `--fs-h1`, `--fs-body`, `--gut`, …). Pri ďalšom
-ladení meniť tie premenné, nie veľkosti po komponentoch.
+- **Typografická mierka.** Všetko bolo o polovicu menšie, než má byť.
+  Obrazovky z dizajnu sú 2000 px široké a veľkosti v nich sú proporčné
+  (nadpis = 7,6 % šírky, telo 2 %). Mierka je teraz vo `vw` premenných na
+  `:root` v `src/ui/style.css` (`--fs-hero`, `--fs-h1`, `--fs-body`, `--gut`).
+  Pri ďalšom ladení meniť **tie premenné**, nie veľkosti po komponentoch.
+- **MEMORIZE je prekreslený z dizajnérskeho exportu.** Krivka lupeňa,
+  rotácie (`ANGLES`), pivot aj dĺžka sú odpísané zo SVG v `../ref-export/`,
+  nie odhadnuté od oka. Geometria je `src/games/memorize/geometry.ts`,
+  kreslenie `draw.ts` (zdieľa ho hra, ukážka v tutoriáli aj výsledkovka).
+- **Odpoveď na krok je veľkým nad kvetom** (`.memo__flash`, SPRÁVNE / CHYBA).
+  Bodky v stavovom riadku ostali, ale nie sú hlavná spätná väzba — hráč sa
+  pozerá na lupene.
+- **Výsledkovky majú vizuál hry.** Podklad posiela každá hra v
+  `RoundResult.visual`.
+- **Vstup sleduje len prvý prst** — položená dlaň už neprerušuje ťah
+  (`src/core/input.ts`).
+- **Tolerancia DRAW** zvýšená (`DIFFICULTY` v `src/games/draw/scoring.ts`),
+  prvé kolo je ľahké. Overené maticou v jednotkových testoch.
+- **Pruh SILA v RELEASE.** Strop ťahu sa odvodzuje od vzdialenosti terča
+  (`maxPullFor`), nie z pevného čísla — pevné číslo bolo na vyšších
+  displejoch nedosiahnuteľné.
+- **Nadpis na obrazovke s kódom** sa už láme do dvoch riadkov ako v dizajne.
 
-Hotové od tej opravy:
+## Čo ostáva
 
-- **Výsledkovky majú vizuál hry.** Rozloženie sa odvodzuje od hry: obrys
-  DRAW má text vo vnútri, kvet MEMORIZE nad ním, meter PUSH aj terč RELEASE
-  vedľa neho. Podklad posiela každá hra v `RoundResult.visual`.
-- **MEMORIZE je lotos** s prekrývajúcimi sa lupeňmi; o zásahu rozhoduje
-  poradie vykresľovania (hráč trafí to, čo vidí).
-- **Vstup sleduje len prvý prst** — položená dlaň už neprerušuje ťah.
+1. Drobnosti v kóde (navrhnuté, Jozef sa k nim ešte nevyjadril):
+   `onRoundEnd` v `App.vue` má nezrušený `setTimeout`; výsledkovka má dva
+   odpočty naraz (`Result.vue` aj `idle.ts`); `scheduleReturn` v `idle.ts`
+   je mŕtvy kód.
+2. DRAW, PUSH a RELEASE sú postavené na statických PNG referenciách, čiže na
+   tom istom odhade, ktorý pri MEMORIZE nefungoval. Ak prídu HTML/SVG
+   exporty, prekresliť ich rovnako ako MEMORIZE.
+3. Nasadenie na Cloudflare Pages (treba účet klienta/agentúry).
+4. Potvrdenie tolerancií na cieľových tabletoch — model stále nevieme.
+5. Kódy v `public/config.json` sú vygenerované, treba ich potvrdiť s klientom.
+6. Znenie `MIMO PORADIA` je zmenené len v kóde; na vykreslených dizajnových
+   obrazovkách je ešte staré `STRATIL SI TO`. Ak to klientovi prekáža, treba
+   obrazovky prekresliť.
 
-Čo ostáva dotiahnuť:
+## Poučenie z tejto práce
 
-1. **Tretie kolo DRAW je prakticky nevyhrateľné.** Vyžaduje priemernú
-   odchýlku pod ~10 px po celej dráhe, bežný človek prstom má 15–25 px.
-   Tolerancia v `src/games/draw/scoring.ts` by mala ísť z 12 na 15–16.
-
-2. **Pruh SILA v RELEASE sa pri správnom hode zastaví na 43 %.** Vyzerá to,
-   akoby hráč ťahal slabo, hoci trafil. `maxPull` zo 190 na ~125.
-
-3. **Prvá prehra ukončí celú hru.** Zvážiť jeden opravný pokus v prvom kole —
-   dizajnový zámer bol, že prvé kolo vyhrá takmer každý.
-
-4. **Nadpis na obrazovke s kódom sa láme do troch riadkov**, v dizajne sú dva.
-
-5. Drobnosti: `onRoundEnd` v `App.vue` má nezrušený `setTimeout`;
-   výsledkovka má dva odpočty naraz (`Result.vue` aj `idle.ts`);
-   `scheduleReturn` v `idle.ts` je mŕtvy kód.
-
-## Čo zostáva mimo toho
-
-- Nasadenie na Cloudflare Pages (treba účet klienta/agentúry)
-- Potvrdenie tolerancií na cieľových tabletoch — model stále nevieme
-- Kódy v `public/config.json` sú vygenerované, treba ich potvrdiť s klientom
+Vizuál sa neladí od oka. Keď niečo „nevyzerá ako dizajn", zmerať to
+číselne (napr. dĺžka lupeňa ako % výšky obrazovky) alebo si vyžiadať
+export. Dva pokusy odhadom pri MEMORIZE skončili tak, že to bolo horšie.

@@ -44,8 +44,8 @@ export function createMemorizeGame(): GameModule {
       if (rc.overrides?.length) cfg = { ...cfg, length: rc.overrides.length };
 
       stage = createStage(root, 'fill');
-      // Odpoveď na ťuknutie musí byť tam, kam sa hráč pozerá — teda nad
-      // kvetom, nie v stavovom riadku. Pri zapamätávaní poradia nikto oči
+      // Výsledok kola musí byť tam, kam sa hráč pozerá — teda nad kvetom,
+      // nie v stavovom riadku. Pri zapamätávaní poradia nikto oči
       // z lupeňov nespustí.
       stage.area.insertAdjacentHTML('beforeend', '<div class="memo__flash"></div>');
       flashEl = stage.area.querySelector('.memo__flash') as HTMLElement;
@@ -134,21 +134,24 @@ export function createMemorizeGame(): GameModule {
       // Ďalšie ťuknutia už neberieme, ale kolo ukončíme až o chvíľu,
       // nech hráč stihne odpoveď prečítať.
       phase = 'done';
-      flash(j.done, true);
+      flash(j.done);
       paintStatus();
       after(900, () => finish(j.score, j.done));
       return;
     }
-    flash(true, false);
     paintStatus();
   }
 
-  /** Veľká odpoveď nad kvetom. Pri poslednom kroku ostáva, inak zmizne. */
-  function flash(ok: boolean, keep: boolean) {
+  /**
+   * Veľká odpoveď nad kvetom, raz za kolo: SPRÁVNE po celom zopakovanom
+   * poradí, CHYBA v momente pomýlenia. Pri medzikrokoch sa úmyselne nehlási
+   * nič — hláška pri každom ťuknutí odvádza oči od lupeňov a hráč stráca
+   * poradie, ktoré si drží v hlave.
+   */
+  function flash(ok: boolean) {
     const c = COPY.games.memorize;
     flashEl.textContent = ok ? c.stepOk : c.stepBad;
     flashEl.className = `memo__flash on ${ok ? 'ok' : 'bad'}`;
-    if (!keep) after(420, () => { flashEl.className = 'memo__flash'; });
   }
 
   /**
