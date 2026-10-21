@@ -32,7 +32,6 @@ export function createMemorizeGame(): GameModule {
   /** kam jas smeruje: 1 kým lupeň svieti, inak 0 */
   let target = [0, 0, 0, 0];
   let wrong = -1;
-  let flashEl: HTMLElement;
 
   const self: GameModule = {
     id: 'memorize',
@@ -44,11 +43,6 @@ export function createMemorizeGame(): GameModule {
       if (rc.overrides?.length) cfg = { ...cfg, length: rc.overrides.length };
 
       stage = createStage(root, 'fill');
-      // Výsledok kola musí byť tam, kam sa hráč pozerá — teda nad kvetom,
-      // nie v stavovom riadku. Pri zapamätávaní poradia nikto oči
-      // z lupeňov nespustí.
-      stage.area.insertAdjacentHTML('beforeend', '<div class="memo__flash"></div>');
-      flashEl = stage.area.querySelector('.memo__flash') as HTMLElement;
       layout();
       seq = makeSequence(cfg.length, seeded(Date.now() & 0xffff));
       got = [];
@@ -150,8 +144,8 @@ export function createMemorizeGame(): GameModule {
    */
   function flash(ok: boolean) {
     const c = COPY.games.memorize;
-    flashEl.textContent = ok ? c.flashOk : c.flashBad;
-    flashEl.className = `memo__flash on ${ok ? 'ok' : 'bad'}`;
+    // nad kvetom, nie cez neho — lupene musia ostať vidieť
+    stage.flash(ok ? c.flashOk : c.flashBad, ok, { y: 33 });
   }
 
   /**

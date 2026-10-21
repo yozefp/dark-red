@@ -10,7 +10,7 @@ Píš po slovensky. Odhady drž triezve, rozsah nerozširuj.
 
 Funkčne hotové a otestované: celý priebeh (attract → kód → tutoriál → hra →
 výsledok), štyri hry, ladiaci panel, konfiguračný panel, offline vrstva.
-54 jednotkových a 42 E2E testov (WebKit + Chromium) prechádza.
+56 jednotkových a 42 E2E testov (WebKit + Chromium) prechádza.
 
 Lokálne: `npm run dev`, potom `http://localhost:5173/?debug=1&nocode=1`.
 Rozcestník všetkých hier je `http://localhost:5173/test.html`.
@@ -26,9 +26,23 @@ Rozcestník všetkých hier je `http://localhost:5173/test.html`.
   rotácie (`ANGLES`), pivot aj dĺžka sú odpísané zo SVG v `../ref-export/`,
   nie odhadnuté od oka. Geometria je `src/games/memorize/geometry.ts`,
   kreslenie `draw.ts` (zdieľa ho hra, ukážka v tutoriáli aj výsledkovka).
-- **Odpoveď na krok je veľkým nad kvetom** (`.memo__flash`, SPRÁVNE / CHYBA).
-  Bodky v stavovom riadku ostali, ale nie sú hlavná spätná väzba — hráč sa
-  pozerá na lupene.
+- **DRAW je prekreslený z exportu** (`../ref-export/Trace-v-polovici.dc.html`).
+  Obrys je rovnostranný trojuholník so zaoblenými rohmi (`TRACE` v
+  `src/games/draw/geometry.ts`), štart v ľavom dolnom rohu, ťah hore.
+  Farby a hrúbky sú v `TRACE_STYLE` v `render.ts`; ten zdieľa hra, ukážka
+  aj výsledkovka. Iskry sú preč, v dizajne nie sú. Export má staršiu
+  paletu (#16080C, #FFB627) a PRESNOSŤ vpravo hore namiesto KOLA — hlavička
+  a stavový riadok ostali spoločné so zvyškom aplikácie.
+- **Odpoveď na kolo je veľkým v ploche hry, vo všetkých hrách**
+  (`shell.flash()`, `.g__flash`). MEMORIZE nad kvetom (SPRÁVNE / CHYBA),
+  DRAW v trojuholníku, PUSH nad číslom, RELEASE medzi terčom a krúžkom.
+  Riadok s nápovedou dole bol príliš nenápadný. Bodky v stavovom riadku
+  MEMORIZE ostali, ale nie sú hlavná spätná väzba.
+- **PUSH stále zrýchľuje** (Jozef, 20. 10.): začne na 12 %/s a nikde
+  nebrzdí, ani pri 100, ani pri 110. Výherné pásmo je napevno 105–115
+  (`BAND`), kolá sa líšia len rýchlosťou pri 110 (`DIFFICULTY` 25/34/48
+  na štandarde) — v pásme je meter 0,40 / 0,29 / 0,21 s. Texty PRESNE / PRÍLIŠ SKORO / PRÍLIŠ NESKORO,
+  značka KONIEC pri 120 (PRETLAK a PREPÁLENÉ hráč nechápal).
 - **Výsledkovky majú vizuál hry.** Podklad posiela každá hra v
   `RoundResult.visual`.
 - **Vstup sleduje len prvý prst** — položená dlaň už neprerušuje ťah
@@ -46,9 +60,10 @@ Rozcestník všetkých hier je `http://localhost:5173/test.html`.
    `onRoundEnd` v `App.vue` má nezrušený `setTimeout`; výsledkovka má dva
    odpočty naraz (`Result.vue` aj `idle.ts`); `scheduleReturn` v `idle.ts`
    je mŕtvy kód.
-2. DRAW, PUSH a RELEASE sú postavené na statických PNG referenciách, čiže na
+2. PUSH a RELEASE sú postavené na statických PNG referenciách, čiže na
    tom istom odhade, ktorý pri MEMORIZE nefungoval. Ak prídu HTML/SVG
-   exporty, prekresliť ich rovnako ako MEMORIZE.
+   exporty, prekresliť ich rovnako ako MEMORIZE a DRAW. Terč v RELEASE
+   ešte kreslí starý tvar loga (`samplePath`).
 3. Nasadenie na Cloudflare Pages (treba účet klienta/agentúry).
 4. Potvrdenie tolerancií na cieľových tabletoch — model stále nevieme.
 5. Kódy v `public/config.json` sú vygenerované, treba ich potvrdiť s klientom.

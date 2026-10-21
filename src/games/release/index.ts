@@ -1,9 +1,9 @@
 import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
 import { attachPointer } from '@/core/input';
-import { createStage, type Stage, type Point } from '../shell';
+import { createStage, type Stage, type Point, type StepMark } from '../shell';
 import { samplePath } from '../draw/geometry';
 import {
-  configFor, landing, pullPower, shoot, scoreRelease, toMm, maxPullFor,
+  configFor, pullPower, shoot, scoreRelease, toMm, aimFor,
   type ReleaseConfig, type Shot,
 } from './scoring';
 import { COPY } from '@/ui/copy';
@@ -93,10 +93,12 @@ export function createReleaseGame(): GameModule {
 
   function layout() {
     const cx = stage.vw / 2;
-    target = { x: cx, y: stage.vh * 0.26 };
-    anchor = { x: cx, y: stage.vh * 0.80 };
+    // Polohy podľa dizajnu (HRA 5 TERČ): krúžok dosť vysoko, aby pod ním
+    // ostalo miesto na plný ťah — v dizajne siaha presne po spodný okraj.
+    target = { x: cx, y: stage.vh * 0.16 };
+    anchor = { x: cx, y: stage.vh * 0.66 };
     outerR = Math.min(stage.vw, stage.vh) * 0.145;
-    cfg = { ...cfg, maxPull: maxPullFor(anchor.y - target.y, cfg.rangeK) };
+    cfg = { ...cfg, ...aimFor(anchor.y - target.y, stage.vh * 0.97 - anchor.y) };
     ringPaths = RINGS.map((k) => samplePath(target.x, target.y, outerR * k, 90));
   }
 
@@ -109,9 +111,12 @@ export function createReleaseGame(): GameModule {
     drag = p;
   }
 
+  /** Guma sa natiahne len po strop — ďalej prst nesleduje, nech nejde z plátna. */
   function move(p: Point) {
     if (!drag) return;
-    drag = p;
+    const dx = p.x - anchor.x, dy = p.y - anchor.y, len = Math.hypot(dx, dy);
+    const k = len > cfg.maxPull ? cfg.maxPull / len : 1;
+    drag = { x: anchor.x + dx * k, y: anchor.y + dy * k };
     paintStatus();
   }
 
@@ -123,30 +128,68 @@ export function createReleaseGame(): GameModule {
 
     const s = shoot(anchor, d, target, cfg);
     shots.push(s);
-    flight = { from: anchor, to: landing(anchor, d, cfg), t0: performance.now() };
+    flight = { from: anchor, to: onStage(anchor, s.point), t0: performance.now() };
+  }
+
+  /**
+   * Bod dopadu stiahnutý po dráhe letu na okraj plochy. Hod mimo obrazovky
+   * by inak nenechal žiadnu stopu a hráč by nevedel, že sa zarátal.
+   * Len na kreslenie — vzdialenosť sa počíta zo skutočného dopadu.
+   */
+  function onStage(from: Point, to: Point): Point {
+    const m = 14;
+    let t = 1;
+    const fit = (a: number, b: number, lo: number, hi: number) => {
+      if (b < lo) t = Math.min(t, (lo - a) / (b - a));
+      if (b > hi) t = Math.min(t, (hi - a) / (b - a));
+    };
+    fit(from.x, to.x, m, stage.vw - m);
+    fit(from.y, to.y, m, stage.vh - m);
+    return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
+  }
+
+  /** Vzdialenosť pre hráča; mimo terča už milimetre nič nehovoria. */
+  function distText(d: number): string {
+    return d > outerR ? 'mimo terča' : `${toMm(d)} mm od stredu`;
   }
 
   function landed() {
     flight = null;
     const r = scoreRelease(shots, cfg);
+    // koniec kola sa rozhodne skôr, než sa prekreslí počítadlo — inak by
+    // po zásahu na chvíľu ukázalo ďalší hod, ktorý už nepríde
+    if (shots.length >= cfg.throws || r.passed) { finish(r.passed); return; }
     paintStatus();
-    if (shots.length >= cfg.throws || r.passed) finish(r.passed);
-    else stage.setHint(`${toMm(shots[shots.length - 1].distance)} mm od stredu. Skús znova.`);
+    const t = distText(shots[shots.length - 1].distance);
+    stage.setHint(`${t[0].toUpperCase()}${t.slice(1)}. Skús znova.`);
   }
 
+  /**
+   * Číslo je hod, ktorý práve beží; po konci kola posledný hodený.
+   * Bodky ako v dizajne: zásah, vedľa, na rade, ešte nehodený.
+   */
   function paintStatus() {
-    const n = Math.min(shots.length + (flight ? 0 : 1), cfg.throws);
-    stage.setStatus('HOD', `${n} / ${cfg.throws}`);
+    const n = done ? shots.length : Math.min(shots.length + (flight ? 0 : 1), cfg.throws);
+    const steps = Array.from({ length: cfg.throws }, (_, k): StepMark => {
+      const landedShot = k < shots.length && !(flight && k === shots.length - 1);
+      if (landedShot) return shots[k].distance <= cfg.tolerance ? 'done' : 'bad';
+      return !done && k === n - 1 ? 'now' : 'todo';
+    });
+    stage.setSteps(`HOD ${n} / ${cfg.throws}`, steps);
   }
 
   function finish(passed: boolean) {
     if (done) return;
     done = true;
+    paintStatus();
     const r = scoreRelease(shots, cfg);
     const mm = toMm(r.best);
+    // medzi terčom a krúžkom, kde nič iné nie je
+    stage.flash(passed ? COPY.games.release.roundWin : COPY.games.release.roundLose, passed,
+      { sub: distText(r.best), y: 41 });
     stage.setHint(passed
-      ? `<b style="color:var(--amber)">${COPY.games.release.roundWin} — ${mm} mm od stredu</b>`
-      : `<b style="color:var(--red)">${COPY.games.release.roundLose} — ${mm} mm od stredu</b>`);
+      ? `<b style="color:var(--amber)">${COPY.games.release.roundWin} — ${distText(r.best)}</b>`
+      : `<b style="color:var(--red)">${COPY.games.release.roundLose} — ${distText(r.best)}</b>`);
 
     const res: RoundResult = {
       round: round.round,
@@ -154,7 +197,8 @@ export function createReleaseGame(): GameModule {
       score: r.score,
       value: String(mm),
       unit: 'mm od stredu',
-      detail: passed ? undefined : `najbližší hod bol ${mm} mm od stredu`,
+      detail: passed ? undefined
+        : r.best > outerR ? 'všetky hody boli mimo terča' : `najbližší hod bol ${mm} mm od stredu`,
       // v násobkoch polomeru terča, nie v pixeloch — výsledok kreslí svoj vlastný
       visual: {
         game: 'release',
@@ -216,10 +260,11 @@ export function createReleaseGame(): GameModule {
     shots.forEach((s, i) => {
       if (flight && i === shots.length - 1) return;    // práve letí
       const hit = s.distance <= cfg.tolerance;
-      ctx.beginPath(); ctx.arc(s.point.x, s.point.y, 7, 0, Math.PI * 2);
+      const q = onStage(anchor, s.point);
+      ctx.beginPath(); ctx.arc(q.x, q.y, 7, 0, Math.PI * 2);
       ctx.fillStyle = hit ? C.amber : 'rgba(240,230,226,.55)';
       ctx.fill();
-      ctx.beginPath(); ctx.arc(s.point.x, s.point.y, 12, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(q.x, q.y, 12, 0, Math.PI * 2);
       ctx.strokeStyle = hit ? 'rgba(232,163,61,.5)' : 'rgba(240,230,226,.22)';
       ctx.lineWidth = 1.5; ctx.stroke();
     });

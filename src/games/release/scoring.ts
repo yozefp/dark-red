@@ -34,21 +34,25 @@ export function configFor(difficulty: string, round: number): ReleaseConfig {
   const t = DIFFICULTY[difficulty] ?? DIFFICULTY.standard;
   return {
     tolerance: t[Math.min(round, t.length) - 1],
-    // Záložná hodnota; hra si ju prepočíta podľa vzdialenosti terča.
+    // Záložné hodnoty; hra si ich prepočíta podľa plátna (aimFor).
     maxPull: 160,
     rangeK: 2.35,
     throws: THROWS,
   };
 }
 
+/** Toľko ukáže pruh SILA pri správnom hode — ako v dizajne. */
+export const SWEET_POWER = 0.7;
+
 /**
- * Strop ťahu. Odvodzuje sa od vzdialenosti terča, nie z pevného čísla:
- * pruh SILA tak pri správnom hode ukáže vždy okolo 65 % bez ohľadu na to,
- * aký tvar má obrazovka — a to je dôležité, keď budú tablety rôzne.
- * Pevná hodnota by na vyššej obrazovke znamenala, že sa terč nedá dohodiť.
+ * Strop ťahu a dolet. Strop je miesto, ktoré je pod krúžkom na plátne —
+ * dlhší ťah by prst vyviedol mimo obrazovky. Dolet sa potom nastaví tak,
+ * aby trafenie stredu chcelo vždy SWEET_POWER sily, nech má tablet
+ * akýkoľvek tvar. (Predtým sa strop počítal zo vzdialenosti terča a správny
+ * hod chcel ťahať až pod spodný okraj displeja.)
  */
-export function maxPullFor(distance: number, rangeK: number): number {
-  return (distance / rangeK) * 1.55;
+export function aimFor(distance: number, room: number): { maxPull: number; rangeK: number } {
+  return { maxPull: room, rangeK: distance / (room * SWEET_POWER) };
 }
 
 export interface Shot {

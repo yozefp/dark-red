@@ -1,5 +1,5 @@
 import { C } from '@/ui/tokens';
-import type { Point } from './geometry';
+import { TRACE_ARROW, type Point } from './geometry';
 import type { Stage } from '../shell';
 import type { DrawScore } from './scoring';
 
@@ -7,12 +7,72 @@ import type { DrawScore } from './scoring';
  * Vykresľovanie hry DRAW. Oddelené od skórovania — ak zaostane,
  * výsledok to neovplyvní.
  *
- * Matná dráha sa predkresľuje raz do offscreen plátna, pretože sa
- * počas kola nemení. Per snímok sa potom robí len prekopírovanie
- * a dokreslenie prejdených úsekov.
+ * Farby aj hrúbky sú z dizajnérskeho exportu (HRA 4 TRACE). Hrúbky sú
+ * v pixeloch exportu a násobia sa `k` z `traceLayout` — inak by na inom
+ * rozlíšení vyšli inak hrubé ako v dizajne.
+ *
+ * Funkcie nižšie zdieľa hra, ukážka na tutoriáli aj výsledková obrazovka,
+ * nech sa nemôžu rozísť.
  */
 
-export interface Spark { x: number; y: number; vx: number; vy: number; r: number; t: number }
+export const TRACE_STYLE = {
+  /** matná dráha, kadiaľ sa ešte nešlo */
+  track: 'rgba(244,232,226,.2)', trackW: 2,
+  /** prejdená časť — prechod zľava zdola doprava hore */
+  stops: ['#D8232A', '#FF4A1C', '#FFB627'], lineW: 10,
+  start: '#FFB627', startFill: '#16080C', startR: 22, startDotR: 8,
+  ring: '#FFE2A0', ringFill: 'rgba(255,241,201,.2)', ringR: 25,
+  off: 'rgba(216,35,42,.75)',
+} as const;
+
+export function tracePolyline(ctx: CanvasRenderingContext2D, path: Point[], closed = true) {
+  ctx.beginPath();
+  path.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+  if (closed) ctx.closePath();
+}
+
+/** Prechod ťahu. V exporte ide cez ohraničenie obrysu po uhlopriečke. */
+export function traceGradient(ctx: CanvasRenderingContext2D, path: Point[]): CanvasGradient {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const p of path) {
+    x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x);
+    y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y);
+  }
+  const g = ctx.createLinearGradient(x0, y1, x1, y0);
+  g.addColorStop(0, TRACE_STYLE.stops[0]);
+  g.addColorStop(0.55, TRACE_STYLE.stops[1]);
+  g.addColorStop(1, TRACE_STYLE.stops[2]);
+  return g;
+}
+
+export function drawTrack(ctx: CanvasRenderingContext2D, path: Point[], k: number) {
+  tracePolyline(ctx, path);
+  ctx.strokeStyle = TRACE_STYLE.track; ctx.lineWidth = TRACE_STYLE.trackW * k; ctx.stroke();
+}
+
+/** Štartovací krúžok a šípka smeru vedľa neho. */
+export function drawStart(ctx: CanvasRenderingContext2D, s: Point, k: number) {
+  const S = TRACE_STYLE;
+  ctx.beginPath(); ctx.arc(s.x, s.y, S.startR * k, 0, Math.PI * 2);
+  ctx.fillStyle = S.startFill; ctx.fill();
+  ctx.strokeStyle = S.start; ctx.lineWidth = 2 * k; ctx.stroke();
+  ctx.beginPath(); ctx.arc(s.x, s.y, S.startDotR * k, 0, Math.PI * 2);
+  ctx.fillStyle = S.start; ctx.fill();
+
+  const at = (p: Point) => [s.x + p.x * k, s.y + p.y * k] as const;
+  const { tail, tip, barbs } = TRACE_ARROW;
+  ctx.beginPath();
+  ctx.moveTo(...at(tail)); ctx.lineTo(...at(tip));
+  ctx.moveTo(...at(barbs[0])); ctx.lineTo(...at(tip)); ctx.lineTo(...at(barbs[1]));
+  ctx.strokeStyle = S.start; ctx.lineWidth = 2 * k; ctx.stroke();
+}
+
+/** Krúžok pod prstom. Mimo línie sčervenie. */
+export function drawFinger(ctx: CanvasRenderingContext2D, p: Point, k: number, off = false) {
+  ctx.beginPath(); ctx.arc(p.x, p.y, TRACE_STYLE.ringR * k, 0, Math.PI * 2);
+  ctx.fillStyle = off ? 'rgba(216,35,42,.22)' : TRACE_STYLE.ringFill; ctx.fill();
+  ctx.strokeStyle = off ? C.red : TRACE_STYLE.ring; ctx.lineWidth = 2 * k; ctx.stroke();
+}
 
 export class DrawRenderer {
   private ctx: CanvasRenderingContext2D;
@@ -20,28 +80,17 @@ export class DrawRenderer {
   private base!: HTMLCanvasElement;
   private covPath: Path2D | null = null;
   private offPath = new Path2D();
-  private sparks: Spark[] = [];
   private adapt = 1;
   private frame = 0;
   private lastFrameAt = 0;
 
-  constructor(private stage: Stage, private path: Point[]) {
+  constructor(private stage: Stage, private path: Point[], private k: number) {
     this.ctx = stage.ctx;
     this.canvas = stage.canvas;
     this.buildBase();
   }
 
   private get scale() { return this.stage.scale; }
-
-  /** Prechod červená → oranžová zhora nadol, ako na schválenom vizuáli. */
-  private strokeGradient(ctx: CanvasRenderingContext2D) {
-    let lo = Infinity, hi = -Infinity;
-    for (const p of this.path) { if (p.y < lo) lo = p.y; if (p.y > hi) hi = p.y; }
-    const g = ctx.createLinearGradient(0, lo, 0, hi);
-    g.addColorStop(0, C.orange);
-    g.addColorStop(1, C.red);
-    return g;
-  }
 
   resize() {
     if (this.stage.fit()) this.buildBase();
@@ -51,42 +100,14 @@ export class DrawRenderer {
   private buildBase() {
     const x = this.stage.offscreen();
     x.lineCap = 'round'; x.lineJoin = 'round';
-
-    x.beginPath();
-    this.path.forEach((p, i) => (i ? x.lineTo(p.x, p.y) : x.moveTo(p.x, p.y)));
-    x.closePath();
-    x.strokeStyle = 'rgba(224,42,38,.14)'; x.lineWidth = 22; x.stroke();
-    x.strokeStyle = '#6E3028'; x.lineWidth = 9; x.stroke();
-
-    const s = this.path[0];
-    x.beginPath(); x.arc(s.x, s.y, 15, 0, Math.PI * 2);
-    x.strokeStyle = C.amber; x.lineWidth = 2.5; x.stroke();
-    x.beginPath(); x.arc(s.x, s.y, 4.5, 0, Math.PI * 2);
-    x.fillStyle = C.amber; x.fill();
-    // šípka naznačujúca smer
-    x.beginPath();
-    x.moveTo(s.x - 9, s.y + 26); x.lineTo(s.x - 2, s.y + 14); x.lineTo(s.x + 6, s.y + 24);
-    x.strokeStyle = C.amber; x.lineWidth = 2; x.stroke();
-
+    drawTrack(x, this.path, this.k);
     this.base = x.canvas as HTMLCanvasElement;
   }
 
   reset() {
     this.covPath = null;
     this.offPath = new Path2D();
-    this.sparks = [];
     this.adapt = 1; this.frame = 0;
-  }
-
-  addSpark(x: number, y: number, now: number) {
-    if (Math.random() > 0.55) return;
-    const a = Math.random() * Math.PI * 2, sp = 0.4 + Math.random() * 2.4;
-    this.sparks.push({
-      x: x + (Math.random() - 0.5) * 7, y: y + (Math.random() - 0.5) * 7,
-      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.9,
-      r: 3.2 + Math.random() * 2.6, t: now,
-    });
-    if (this.sparks.length > 22) this.sparks.shift();
   }
 
   /** Prestaví cesty podľa skóre. Volá sa len keď sa niečo zmenilo. */
@@ -114,60 +135,43 @@ export class DrawRenderer {
       else if (this.frame > 30 && dt < 15) this.adapt = 1;
     }
     this.lastFrameAt = now; this.frame++;
-    if (this.frame % this.adapt !== 0 && this.sparks.length === 0) return false;
+    if (this.frame % this.adapt !== 0) return false;
 
-    const ctx = this.ctx;
+    const ctx = this.ctx, k = this.k;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.drawImage(this.base, 0, 0);
     ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
-    ctx.strokeStyle = 'rgba(200,52,62,.75)'; ctx.lineWidth = 4; ctx.stroke(this.offPath);
+    ctx.strokeStyle = TRACE_STYLE.off; ctx.lineWidth = 4 * k; ctx.stroke(this.offPath);
 
     if (this.covPath) {
-      ctx.strokeStyle = 'rgba(255,90,31,.26)'; ctx.lineWidth = 24; ctx.stroke(this.covPath);
-      ctx.strokeStyle = this.strokeGradient(ctx); ctx.lineWidth = 10; ctx.stroke(this.covPath);
+      ctx.strokeStyle = traceGradient(ctx, this.path);
+      ctx.lineWidth = TRACE_STYLE.lineW * k;
+      ctx.stroke(this.covPath);
     }
 
-    for (let i = this.sparks.length - 1; i >= 0; i--) {
-      const s = this.sparks[i], age = (now - s.t) / 420;
-      if (age >= 1) { this.sparks.splice(i, 1); continue; }
-      const px = s.x + s.vx * age * 26, py = s.y + s.vy * age * 26 + age * age * 14;
-      ctx.beginPath(); ctx.arc(px, py, s.r * (1 - age) + 0.6, 0, Math.PI * 2);
-      ctx.fillStyle = isOff
-        ? `rgba(224,67,74,${(1 - age) * 0.55})`
-        : `rgba(255,${Math.round(150 + 90 * (1 - age))},${Math.round(40 + 70 * (1 - age))},${(1 - age) * 0.85})`;
-      ctx.fill();
-    }
-
-    if (finger) {
-      ctx.beginPath(); ctx.arc(finger.x, finger.y, 14, 0, Math.PI * 2);
-      ctx.fillStyle = isOff ? 'rgba(224,67,74,.22)' : 'rgba(255,180,90,.20)'; ctx.fill();
-      ctx.beginPath(); ctx.arc(finger.x, finger.y, 7.5, 0, Math.PI * 2);
-      ctx.fillStyle = isOff ? '#E0434A' : '#FFE3A8'; ctx.fill();
-      ctx.beginPath(); ctx.arc(finger.x, finger.y, 3.2, 0, Math.PI * 2);
-      ctx.fillStyle = '#FFFFFF'; ctx.fill();
-    }
+    // štart ide nad ťah, ako v exporte
+    drawStart(ctx, this.path[0], k);
+    if (finger) drawFinger(ctx, finger, k, isOff);
     return true;
   }
 
   /** Celý tvar rozžiarený alebo tlmený — pre výsledkovú obrazovku. */
   renderFinal(won: boolean) {
-    const ctx = this.ctx;
+    const ctx = this.ctx, k = this.k;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    this.path.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-    ctx.closePath();
+    tracePolyline(ctx, this.path);
     if (won) {
-      ctx.strokeStyle = 'rgba(255,90,31,.22)'; ctx.lineWidth = 28; ctx.stroke();
-      ctx.strokeStyle = this.strokeGradient(ctx); ctx.lineWidth = 10; ctx.stroke();
+      ctx.strokeStyle = traceGradient(ctx, this.path); ctx.lineWidth = TRACE_STYLE.lineW * k;
     } else {
-      ctx.strokeStyle = C.maroon; ctx.lineWidth = 7; ctx.stroke();
+      ctx.strokeStyle = C.maroon; ctx.lineWidth = 7 * k;
     }
+    ctx.stroke();
   }
 
   get fps() { return this.lastFrameAt ? Math.round(1000 / Math.max(1, performance.now() - this.lastFrameAt)) : 0; }

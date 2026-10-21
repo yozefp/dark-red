@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
-import { samplePath, VIEW } from '@/games/draw/geometry';
+import { samplePath, traceShape, TRACE, VIEW } from '@/games/draw/geometry';
+import { traceGradient, tracePolyline, TRACE_STYLE } from '@/games/draw/render';
 import { layoutFlower, drawFlower } from '@/games/memorize/draw';
 import { C } from '@/ui/tokens';
 import type { ResultVisual } from '@/core/types';
@@ -72,25 +73,24 @@ onMounted(() => {
 
 /** DRAW — obrys buď rozžiarený, alebo tlmený s bodom, kde hráč vybočil. */
 function drawShape(ctx: CanvasRenderingContext2D, vh: number, k: number) {
-  const r = Math.min(VIEW, vh) * 0.42;
-  const path = samplePath(VIEW / 2, vh / 2, r, 200);
-  ctx.beginPath();
-  path.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-  ctx.closePath();
+  // Obrys zaberá asi tri štvrtiny výšky ako predtým — v plnej výške hry
+  // by narážal do hlavičky a text by v ňom plával.
+  const h = Math.min(vh * 0.78, (VIEW * 0.78 * TRACE.height) / TRACE.width);
+  const u = h / TRACE.height;
+  const path = traceShape(VIEW / 2, vh / 2, h, 200);
+  tracePolyline(ctx, path);
 
   if (props.won) {
-    const g = ctx.createLinearGradient(0, vh / 2 - r, 0, vh / 2 + r);
-    g.addColorStop(0, C.orange); g.addColorStop(1, C.red);
-    ctx.strokeStyle = `rgba(255,90,31,${0.22 * k})`; ctx.lineWidth = 30; ctx.stroke();
-    ctx.strokeStyle = g; ctx.lineWidth = 9; ctx.stroke();
+    ctx.save();
+    ctx.globalAlpha = k;
+    ctx.strokeStyle = traceGradient(ctx, path); ctx.lineWidth = TRACE_STYLE.lineW * u; ctx.stroke();
+    ctx.restore();
   } else {
-    ctx.strokeStyle = C.maroon; ctx.lineWidth = 7; ctx.stroke();
+    ctx.strokeStyle = C.maroon; ctx.lineWidth = 7 * u; ctx.stroke();
     const off = props.visual.game === 'draw' ? props.visual.off : null;
     if (off) {
       // bod na okraji ukazuje, kde ťah opustil líniu
-      const x = VIEW / 2 + (off.x - VIEW / 2) * (r / (VIEW * 0.4));
-      const y = vh / 2 + (off.y - VIEW / 2) * (r / (VIEW * 0.4));
-      ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(VIEW / 2 + off.x * u, vh / 2 + off.y * u, 7, 0, Math.PI * 2);
       ctx.fillStyle = C.red; ctx.fill();
     }
   }

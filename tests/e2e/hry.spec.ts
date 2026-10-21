@@ -89,7 +89,7 @@ test.describe('MEMORIZE', () => {
     const hned = await jas();
 
     // po celom zopakovanom poradí musí byť odpoveď veľkým nad kvetom
-    await expect(page.locator('.memo__flash.ok')).toHaveText('SPRÁVNE');
+    await expect(page.locator('.g__flash.ok')).toHaveText('SPRÁVNE');
     await expect(page.locator('.g__status .dot--done')).toHaveCount(seq.length);
     await expect(page.locator('.g__status .dot--bad')).toHaveCount(0);
 
@@ -113,7 +113,7 @@ test.describe('MEMORIZE', () => {
     }, (seq[0] + 1) % 4);
 
     // chybný krok sa musí okamžite ukázať veľkým nad kvetom
-    await expect(page.locator('.memo__flash.bad')).toHaveText('CHYBA');
+    await expect(page.locator('.g__flash.bad')).toHaveText('CHYBA');
     await expect(page.locator('.g__status .dot--bad')).toHaveCount(1);
 
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
@@ -133,10 +133,10 @@ test.describe('MEMORIZE', () => {
     // SPRÁVNE sa pri medzikroku nesmie ukázať ani na chvíľu — odvádzalo by
     // oči od lupeňov, kým si hráč drží poradie v hlave. Hláška by sa
     // nastavila ešte v tom istom ťuknutí, čiže tu už musí byť vidieť.
-    await expect(page.locator('.memo__flash.on')).toHaveCount(0);
+    await expect(page.locator('.g__flash.on')).toHaveCount(0);
     expect((await info(page) as { got: number[] }).got).toHaveLength(1);
     await page.waitForTimeout(500);
-    await expect(page.locator('.memo__flash.on')).toHaveCount(0);
+    await expect(page.locator('.g__flash.on')).toHaveCount(0);
   });
 
   test('počas ukážky sa ťuknutia nepočítajú', async ({ page }) => {

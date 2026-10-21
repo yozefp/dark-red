@@ -48,7 +48,7 @@ export function createPushGame(): GameModule {
               <div class="push__fill"></div>
             </div>
             <div class="push__marks">
-              <div class="push__burn">SPÁLENÉ</div>
+              <div class="push__burn">${COPY.games.push.stop}</div>
               <div class="push__target">110</div>
             </div>
           </div>
@@ -116,7 +116,7 @@ export function createPushGame(): GameModule {
     holding = true;
     lastT = performance.now();
     el.root.classList.add('push--hold');
-    shell.setHint('Nad stovkou to ide ťažšie.');
+    shell.setHint('Zrýchľuje to. Pusť na stodesiatich.');
   }
 
   function release() {
@@ -170,6 +170,8 @@ export function createPushGame(): GameModule {
     const s = over ? SCALE_HIGH : SCALE_LOW;
     const f = Math.max(0, Math.min(1, (value - s.lo) / (s.hi - s.lo)));
     el.fill.style.transform = `scaleY(${f})`;
+    // pod stovkou stĺpec sýtne s hodnotou; po prerazení je plný a červený
+    el.fill.style.opacity = over ? '1' : String(0.35 + 0.65 * f);
     const shown = Math.round(value);
     el.num.textContent = String(shown);
     shell.setStatus('INTENZITA', `${shown} %`);
@@ -183,6 +185,8 @@ export function createPushGame(): GameModule {
     el.root.classList.add(r.passed ? 'push--win' : 'push--lose');
 
     const shown = Math.round(value);
+    // pod veľkým číslom — nad ním by dlhá hláška narazila do popisov metra
+    shell.flash(r.passed ? COPY.games.push.roundWin : label(r), r.passed, { y: 79 });
     shell.setHint(r.passed
       ? `<b style="color:var(--amber)">${COPY.games.push.roundWin} — ${shown} %</b>`
       : `<b style="color:var(--red)">${label(r)} — ${shown} %</b>`);
@@ -220,11 +224,11 @@ export function createPushGame(): GameModule {
 /** Prehrať sa dá dvoma spôsobmi a hráč musí vedieť ktorým. */
 function label(r: PushScore): string {
   const c = COPY.games.push;
-  return r.burnt ? c.roundBurnt : c.roundEarly;
+  return r.late ? c.roundLate : c.roundEarly;
 }
 
 function reason(r: PushScore): string {
-  if (r.burnt) return 'pustenie prišlo až za stodvadsiatimi';
-  if (r.early) return 'pustenie prišlo pred stovkou';
-  return `mimo pásma o ${r.offset.toFixed(1)} %`;
+  if (r.burnt) return 'meter došiel až na stodvadsať';
+  if (r.early && r.offset > 10) return 'pustenie prišlo pred stovkou';
+  return `od stodesiatky ${r.offset.toFixed(1).replace('.', ',')} % ${r.early ? 'pod' : 'nad'}`;
 }

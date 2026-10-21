@@ -21,6 +21,12 @@ export interface Shell {
    */
   setSteps(label: string, steps: ReadonlyArray<StepMark>): void;
   setHint(html: string): void;
+  /**
+   * Veľká odpoveď v ploche hry, raz za kolo — tam, kam sa hráč pozerá.
+   * Riadok s nápovedou dole si pri sústredení na hru nikto nevšimne.
+   * `y` je zvislý stred hlášky v percentách plochy.
+   */
+  flash(text: string, ok: boolean, opts?: { sub?: string; y?: number }): void;
   destroy(): void;
 }
 
@@ -52,6 +58,20 @@ export function createShell(root: HTMLElement): Shell {
     },
 
     setHint(html) { hintEl.innerHTML = html; },
+    flash(text, ok, { sub, y = 50 } = {}) {
+      // vzniká až teraz — hry si obsah plochy pri štarte prepisujú
+      let el = area.querySelector('.g__flash') as HTMLElement | null;
+      if (!el) {
+        el = document.createElement('div');
+        area.appendChild(el);
+      }
+      el.style.top = `${y}%`;
+      el.innerHTML = `<div class="g__flash-main">${text}</div>`
+        + (sub ? `<div class="g__flash-sub">${sub}</div>` : '');
+      el.className = 'g__flash';
+      void el.offsetWidth;            // nech nábeh beží aj pri opakovanom zobrazení
+      el.className = `g__flash on ${ok ? 'ok' : 'bad'}`;
+    },
     destroy() { root.innerHTML = ''; },
   };
 }

@@ -1,6 +1,6 @@
 import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
 import { attachPointer, type Sample } from '@/core/input';
-import { samplePath, VIEW, dist, type Point } from './geometry';
+import { traceLayout, STAGE_ASPECT, VIEW, dist, type Point } from './geometry';
 import { createStage, type Stage } from '../shell';
 import { scoreDraw, configFor, type DrawScore, type DrawConfig } from './scoring';
 import { DrawRenderer } from './render';
@@ -9,7 +9,6 @@ import { C } from '@/ui/tokens';
 import { publishProbe, clearProbe, recordSample } from '@/debug/hooks';
 
 const PATH_POINTS = 220;
-const SHAPE_INSET = 0.80;      // odsadenie od okrajov kvôli odmietaniu dotyku pri ráme
 const START_RADIUS = 80;       // ako blízko štartu treba začať
 
 export function createDrawGame(): GameModule {
@@ -19,6 +18,8 @@ export function createDrawGame(): GameModule {
   let raf = 0;
 
   let path: Point[] = [];
+  /** jednotky siete na pixel exportu — pre prepočet výsledku */
+  let k = 1;
   let cfg: DrawConfig;
   let round: RoundConfig;
   let samples: Sample[] = [];
@@ -37,9 +38,13 @@ export function createDrawGame(): GameModule {
       if (rc.overrides?.tolerance) cfg = { ...cfg, tolerance: rc.overrides.tolerance };
       if (rc.overrides?.pass) cfg = { ...cfg, pass: rc.overrides.pass };
 
-      stage = createStage(el, 1);
-      path = samplePath(VIEW / 2, VIEW / 2, (VIEW / 2) * SHAPE_INSET, PATH_POINTS);
-      renderer = new DrawRenderer(stage, path);
+      // Plátno má pomer rámca z exportu, takže obrys sedí v ploche ako
+      // v dizajne. Sieť je široká VIEW — tolerancie ostávajú v rovnakých
+      // jednotkách ako doteraz.
+      stage = createStage(el, STAGE_ASPECT);
+      stage.area.insertAdjacentHTML('afterbegin', '<div class="draw__glow"></div>');
+      ({ path, k } = traceLayout(stage.vw, stage.vh, PATH_POINTS));
+      renderer = new DrawRenderer(stage, path, k);
       resetRound();
 
       detach = attachPointer(stage.canvas, {
@@ -85,7 +90,6 @@ export function createDrawGame(): GameModule {
     for (const s of list) {
       finger = { x: s.x, y: s.y };
       samples.push(s);
-      renderer.addSpark(s.x, s.y, performance.now());
     }
     score = scoreDraw(samples, path, cfg);
     isOff = score.offNow;
@@ -122,6 +126,9 @@ export function createDrawGame(): GameModule {
     const passed = score.score >= cfg.pass;
     renderer.renderFinal(passed);
     const pct = Math.round(score.score * 100);
+    // v strede trojuholníka; ťažisko je nižšie než stred ohraničenia
+    stage.flash(passed ? COPY.games.draw.roundWin : COPY.games.draw.roundLose, passed,
+      { sub: `${pct} %`, y: 60 });
     stage.setHint(passed
       ? `<b style="color:${C.amber}">${COPY.games.draw.roundWin} — ${pct} %</b>`
       : `<b style="color:${C.red}">${COPY.games.draw.roundLose} — ${pct} %</b>`);
@@ -134,9 +141,14 @@ export function createDrawGame(): GameModule {
       unit: '%',
       detail: passed ? undefined : reason(score, cfg),
       // prvé vybočenie — výsledok ním ukáže, kde ťah opustil líniu
-      visual: { game: 'draw', off: score.offSegments[0]?.[1] ?? null },
+      visual: { game: 'draw', off: offFromCenter(score.offSegments[0]?.[1]) },
     };
     self.onRoundEnd?.(r);
+  }
+
+  /** Bod v pixeloch exportu od stredu plochy — výsledok má inú sieť. */
+  function offFromCenter(p: Point | undefined): Point | null {
+    return p ? { x: (p.x - stage.vw / 2) / k, y: (p.y - stage.vh / 2) / k } : null;
   }
 
   function loop() {

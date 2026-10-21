@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue';
-import { samplePath } from '@/games/draw/geometry';
+import { samplePath, traceLayout } from '@/games/draw/geometry';
+import { drawTrack, drawStart, drawFinger, traceGradient, tracePolyline, TRACE_STYLE } from '@/games/draw/render';
 import { layoutFlower, stepGlow, drawFlower } from '@/games/memorize/draw';
 import { C } from '@/ui/tokens';
 import type { GameId } from '@/core/types';
@@ -22,10 +23,16 @@ onMounted(() => {
   if (!ctx) return;
 
   let scale = 1;
+  // Ukážka je kreslená do štvorca, takže aj plátno musí byť štvorec.
+  // Keby sa roztiahlo na celý stĺpec, obrázok by sa natiahol a lupene
+  // aj obrys by na širokej obrazovke vyzerali pokrivené.
   const fit = () => {
-    const r = el.getBoundingClientRect();
+    const host = el.parentElement?.getBoundingClientRect();
+    if (!host) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    const side = Math.min(r.width, r.height);
+    const side = Math.min(host.width, host.height, window.innerHeight * 0.68, 520);
+    el.style.width = `${side}px`;
+    el.style.height = `${side}px`;
     el.width = Math.round(side * dpr);
     el.height = Math.round(side * dpr);
     scale = (side * dpr) / V;
@@ -33,7 +40,7 @@ onMounted(() => {
   fit();
   window.addEventListener('resize', fit);
 
-  const path = samplePath(V / 2, V / 2, V * 0.37, 160);
+  const trace = traceLayout(V, V, 160);
   const petals = layoutFlower(V, V);
   const glow = [0, 0, 0, 0];
   const target = [0, 0, 0, 0];
@@ -49,7 +56,7 @@ onMounted(() => {
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
-    if (props.game === 'draw') drawDemo(ctx, path, k);
+    if (props.game === 'draw') drawDemo(ctx, trace.path, trace.k, k);
     else if (props.game === 'push') pushDemo(ctx, k);
     else if (props.game === 'memorize') memoDemo(ctx, petals, glow, target, k, dt);
     else releaseDemo(ctx, k);
@@ -64,39 +71,24 @@ onMounted(() => {
   });
 });
 
-/** Bodkovaný obrys, štartovací krúžok so šípkou a prst, ktorý ho obkresľuje. */
-function drawDemo(ctx: CanvasRenderingContext2D, path: { x: number; y: number }[], k: number) {
-  ctx.save();
-  ctx.setLineDash([2, 9]);
-  ctx.beginPath();
-  path.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-  ctx.closePath();
-  ctx.strokeStyle = '#7A4A42'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.restore();
-
+/** Obrys, štart so šípkou a prst, ktorý ho obkresľuje — kreslené ako v hre. */
+function drawDemo(
+  ctx: CanvasRenderingContext2D, path: { x: number; y: number }[], u: number, k: number,
+) {
+  drawTrack(ctx, path, u);
   const n = Math.floor(Math.min(1, k * 1.25) * path.length);
   if (n > 1) {
-    ctx.beginPath();
-    for (let i = 0; i < n; i++) (i ? ctx.lineTo(path[i].x, path[i].y) : ctx.moveTo(path[i].x, path[i].y));
-    ctx.strokeStyle = 'rgba(255,90,31,.22)'; ctx.lineWidth = 15; ctx.stroke();
-    ctx.strokeStyle = C.orange; ctx.lineWidth = 6; ctx.stroke();
-
-    const p = path[Math.min(n, path.length - 1)];
-    ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFE3A8'; ctx.fill();
+    tracePolyline(ctx, path.slice(0, n), false);
+    ctx.strokeStyle = traceGradient(ctx, path); ctx.lineWidth = TRACE_STYLE.lineW * u; ctx.stroke();
   }
-
-  const s = path[0];
-  ctx.beginPath(); ctx.arc(s.x, s.y, 11, 0, Math.PI * 2);
-  ctx.strokeStyle = C.amber; ctx.lineWidth = 2; ctx.stroke();
-  ctx.beginPath(); ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
-  ctx.fillStyle = C.amber; ctx.fill();
+  drawStart(ctx, path[0], u);
+  if (n > 1) drawFinger(ctx, path[Math.min(n, path.length - 1)], u);
 }
 
-/** Meter vyletí na sto, tam sa zarazí a ďalej lezie pomaly do pásma. */
+/** Meter sa rozbieha pomaly a stále zrýchľuje, až kým sa nepustí na 110. */
 function pushDemo(ctx: CanvasRenderingContext2D, k: number) {
   const x = V * 0.44, w = V * 0.16, top = V * 0.12, bot = V * 0.88, h = bot - top;
-  const value = k < 0.3 ? (k / 0.3) * 100 : Math.min(112, 100 + ((k - 0.3) / 0.45) * 12);
+  const value = Math.min(110, 110 * (k / 0.75) ** 2);
   const lo = 100, hi = 125;
   const y = (v: number) => bot - ((Math.max(lo, v) - lo) / (hi - lo)) * h;
 
@@ -193,5 +185,5 @@ function releaseDemo(ctx: CanvasRenderingContext2D, k: number) {
 </template>
 
 <style scoped>
-.demo{display:block;width:100%;height:100%;max-height:min(68vh,520px)}
+.demo{display:block;flex:0 0 auto}
 </style>

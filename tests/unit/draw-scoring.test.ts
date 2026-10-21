@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { samplePath, VIEW, type Point } from '@/games/draw/geometry';
+import { samplePath, traceLayout, traceShape, STAGE_ASPECT, VIEW, type Point } from '@/games/draw/geometry';
 import { scoreDraw, configFor } from '@/games/draw/scoring';
 import type { Sample } from '@/core/input';
 
-const path = samplePath(VIEW / 2, VIEW / 2, (VIEW / 2) * 0.8, 220);
+// tá istá dráha a sieť ako v hre
+const path = traceLayout(VIEW, Math.round(VIEW / STAGE_ASPECT), 220).path;
 
 /** Ťah po dráhe s voliteľným chvením a voliteľným vybočením. */
 function trace(opts: { jitter?: number; detour?: number; fraction?: number } = {}): Sample[] {
@@ -92,5 +93,24 @@ describe('geometry', () => {
   it('dráha je uzavretá', () => {
     const p: Point[] = samplePath(300, 300, 240, 200);
     expect(Math.hypot(p[0].x - p[p.length-1].x, p[0].y - p[p.length-1].y)).toBeLessThan(20);
+  });
+
+  it('obrys DRAW sedí na export — štart, vrchol aj spodná hrana', () => {
+    // v súradniciach exportu 1280×800: ohraničenie 335,6–944,4 × 120,7–679,8
+    const p = traceShape(640, 400.25, 559.1, 400);
+    const near = (a: Point, x: number, y: number) => Math.hypot(a.x - x, a.y - y);
+    expect(near(p[0], 351.4, 620.6)).toBeLessThan(1);
+    expect(Math.min(...p.map((q) => q.y))).toBeCloseTo(120.7, 0);
+    expect(Math.max(...p.map((q) => q.y))).toBeCloseTo(679.8, 0);
+    expect(Math.min(...p.map((q) => q.x))).toBeCloseTo(335.6, 0);
+    // ťah ide od štartu hore po ľavej strane
+    expect(p[10].y).toBeLessThan(p[0].y);
+  });
+
+  it('obrys DRAW je vzorkovaný rovnomerne a uzavretý', () => {
+    const p = traceShape(300, 250, 460, 220);
+    const gaps = p.map((q, i) => { const n = p[(i + 1) % p.length]; return Math.hypot(n.x - q.x, n.y - q.y); });
+    const mean = gaps.reduce((s, v) => s + v, 0) / gaps.length;
+    expect(Math.max(...gaps.map((g) => Math.abs(g - mean) / mean))).toBeLessThan(0.02);
   });
 });

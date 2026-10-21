@@ -42,11 +42,13 @@ export const COPY = {
       headline: 'STO PERCENT JE STROP. PRE OSTATNÝCH.',
       rule: 'Drž. Pusť na stodesiatich.',
       cta: 'PRILOŽ PRST',
-      roundWin: 'PRETLAK',
-      /** držal pridlho, meter prerazil stodvadsiatku */
-      roundBurnt: 'PREPÁLENÉ',
-      /** pustil skôr, než sa meter dostal do pásma */
-      roundEarly: 'PRISKORO',
+      roundWin: 'PRESNE',
+      /** pustenie nad pásmom alebo meter došiel na 120 */
+      roundLate: 'PRÍLIŠ NESKORO',
+      /** pustenie pod pásmom */
+      roundEarly: 'PRÍLIŠ SKORO',
+      /** značka na metri pri 120 — tam kolo skončí samo */
+      stop: 'KONIEC',
     },
     memorize: {
       headline: 'ZAPAMÄTAJ SI SVETLO',

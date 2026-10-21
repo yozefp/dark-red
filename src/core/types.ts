@@ -27,6 +27,7 @@ export interface Pt { x: number; y: number }
  * dopýtať — všetko potrebné musí prísť s ním.
  */
 export type ResultVisual =
+  /** bod vybočenia v pixeloch exportu od stredu obrysu */
   | { game: 'draw'; off: Pt | null }
   | { game: 'push'; value: number; band: number }
   | { game: 'memorize'; seq: number[]; got: number[] }
