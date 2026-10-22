@@ -121,13 +121,23 @@ export function urlOverride(search = location.search): Partial<Config> {
   return o as Partial<Config>;
 }
 
-/** Preskočenie kódu pri testovaní — opäť len s ?debug=1. */
+/**
+ * Ukážka pre klienta (stránka /erik): z adresy sa berie hra, kolá
+ * a preskočenie kódu ako pri ?debug=1, ale bez ladiaceho panela
+ * a bez uloženého prebitia z prehliadača — vidno presne to, čo v predajni.
+ */
+export function isShowcase(search = location.search): boolean {
+  return new URLSearchParams(search).has('ukazka');
+}
+
+/** Preskočenie kódu pri testovaní — len s ?debug=1 alebo v ukážke. */
 export function skipCode(search = location.search): boolean {
   const q = new URLSearchParams(search);
-  return q.has('debug') && q.has('nocode');
+  return (q.has('debug') || q.has('ukazka')) && q.has('nocode');
 }
 
 function applyOverride(cfg: Config): Config {
+  if (isShowcase()) return parseConfig({ ...cfg, ...urlOverride() });
   const debug = new URLSearchParams(location.search).has('debug');
   if (!debug) return cfg;
   return parseConfig({ ...cfg, ...(getOverride() ?? {}), ...urlOverride() });

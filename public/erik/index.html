@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TEREA Dark Red — ukážka</title>
+<!--
+  Ukážka hier v ráme tabletu — pre kolegu a klientku. Hra beží v iframe
+  v skutočnom rozlíšení iPadu (1180×820 bodov) a celý rám sa zmenší tak,
+  aby sa zmestil do okna. Rozloženie aj písmo sú tak také, ako na tablete.
+  Hra sa spúšťa s ?ukazka=1: bez kódu a bez ladiaceho panela.
+-->
+<style>
+:root{
+  --bg:#120807; --text:#F0E6E2; --muted:#A08A82; --dim:#6B5450;
+  --amber:#E8A33D; --line:#3E1E1A;
+  --tab-w:1180px; --tab-h:820px; --bezel:26px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:radial-gradient(ellipse at 50% 60%,#2A1310,var(--bg) 70%);color:var(--text);
+  font:15px/1.4 -apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  display:flex;flex-direction:column;align-items:center;overflow:hidden}
+
+.top{width:100%;max-width:1280px;padding:18px 16px 0;display:flex;flex-wrap:wrap;
+  align-items:center;justify-content:space-between;gap:12px 24px}
+.brand{letter-spacing:.24em;font-size:13px;white-space:nowrap}
+.brand b{color:var(--amber);font-weight:600;margin-left:6px}
+.pick{display:flex;flex-wrap:wrap;gap:8px}
+.pick button{font:inherit;font-size:13px;letter-spacing:.16em;color:var(--muted);
+  background:none;border:1px solid var(--line);border-radius:999px;padding:9px 18px;cursor:pointer;
+  transition:color .15s,border-color .15s,background .15s}
+.pick button:hover{color:var(--text);border-color:#6B3A32}
+.pick button[aria-pressed="true"]{color:#1A0E0C;background:var(--amber);border-color:var(--amber)}
+
+.stage{flex:1 1 auto;width:100%;min-height:0;display:flex;align-items:center;justify-content:center;
+  padding:16px}
+/* rám má pevný rozmer v bodoch tabletu; zmenšuje sa celý cez transform */
+.tablet{position:relative;flex:0 0 auto;
+  width:calc(var(--tab-w) + 2 * var(--bezel));height:calc(var(--tab-h) + 2 * var(--bezel));
+  padding:var(--bezel);border-radius:56px;background:#0B0B0C;
+  box-shadow:0 0 0 2px #2C2C2E,0 0 0 9px #18181A,0 40px 120px rgba(0,0,0,.7);
+  transform-origin:center center}
+/* kamera na dlhšej strane — tablet je na šírku */
+.tablet::before{content:'';position:absolute;top:calc(var(--bezel) / 2 - 4px);left:50%;
+  width:8px;height:8px;margin-left:-4px;border-radius:50%;background:#1F2226}
+.screen{width:100%;height:100%;border-radius:30px;overflow:hidden;background:#000}
+.screen iframe{display:block;width:var(--tab-w);height:var(--tab-h);border:0}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">TEREA<b>DARK RED</b></div>
+    <div class="pick" role="group" aria-label="Výber hry">
+      <button data-game="draw">DRAW</button>
+      <button data-game="push">PUSH</button>
+      <button data-game="memorize">MEMORIZE</button>
+      <button data-game="release">RELEASE</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="tablet" id="tablet">
+      <div class="screen"><iframe id="game" title="Hra na tablete" allow="fullscreen"></iframe></div>
+    </div>
+  </div>
+
+<script>
+  const frame = document.getElementById('game');
+  const tablet = document.getElementById('tablet');
+  const buttons = document.querySelectorAll('.pick button');
+
+  // Ťuknutie na tú istú hru ju spustí odznova. Kolá a obtiažnosť sú
+  // ako v predajni; kód sa preskočí, úvodná obrazovka ostáva.
+  function play(game) {
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.game === game)));
+    frame.src = `/?ukazka=1&nocode=1&rounds=3&game=${game}&t=${Date.now()}`;
+    try { history.replaceState(null, '', `#${game}`); } catch (e) { /* nevadí */ }
+  }
+  buttons.forEach((b) => b.addEventListener('click', () => play(b.dataset.game)));
+
+  // celý tablet sa zmestí do voľného miesta, nikdy sa nezväčší nad skutočnú veľkosť
+  function fit() {
+    const stage = tablet.parentElement.getBoundingClientRect();
+    const w = tablet.offsetWidth + 20, h = tablet.offsetHeight + 20;   // + okraj rámu
+    const k = Math.min(1, (stage.width - 32) / w, (stage.height - 32) / h);
+    tablet.style.transform = `scale(${Math.max(0.1, k)})`;
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  const first = location.hash.slice(1);
+  play(['draw', 'push', 'memorize', 'release'].includes(first) ? first : 'draw');
+</script>
+</body>
+</html>
