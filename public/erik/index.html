@@ -2,9 +2,14 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#120807">
 <title>TEREA Dark Red — ukážka</title>
+<!-- vlastný manifest, aby sa dala nainštalovať zvlášť od hlavnej aplikácie -->
+<link rel="manifest" href="/erik/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <!--
   Ukážka hier v ráme tabletu — pre kolegu a klientku. Hra beží v iframe
   v skutočnom rozlíšení iPadu (1180×820 bodov) a celý rám sa zmenší tak,
@@ -47,9 +52,37 @@ body{background:radial-gradient(ellipse at 50% 60%,#2A1310,var(--bg) 70%);color:
   width:8px;height:8px;margin-left:-4px;border-radius:50%;background:#1F2226}
 .screen{width:100%;height:100%;border-radius:30px;overflow:hidden;background:#000}
 .screen iframe{display:block;width:var(--tab-w);height:var(--tab-h);border:0}
+
+/* Nainštalovaná na skutočnom tablete: rám by bol tablet v tablete a hra
+   by sa zmenšila, čo skresľuje skúšanie dotyku. Hra preto vyplní celú
+   plochu pod výberom. */
+@media (display-mode: fullscreen), (display-mode: standalone){
+  .top{padding:8px 16px}
+  .stage{padding:0}
+  .tablet{width:100%;height:100%;padding:0;border-radius:0;box-shadow:none;transform:none!important}
+  .tablet::before{display:none}
+  .screen{border-radius:0}
+  .screen iframe{width:100%;height:100%}
+}
+
+/* PIN — len aby ukážku neotvoril náhodný návštevník, nie skutočné zabezpečenie */
+.lock{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:16px;background:var(--bg)}
+.lock[hidden]{display:none}
+.lock input{font:inherit;font-size:28px;letter-spacing:.5em;text-align:center;width:200px;
+  padding:12px 0 12px .5em;color:var(--text);background:none;border:1px solid var(--line);border-radius:12px}
+.lock input:focus{outline:none;border-color:var(--amber)}
+.lock p{color:var(--muted);letter-spacing:.16em;font-size:13px}
+.lock.bad input{border-color:#C0392B}
 </style>
 </head>
 <body>
+  <form class="lock" id="lock" hidden>
+    <div class="brand">TEREA<b>DARK RED</b></div>
+    <input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN">
+    <p>ZADAJTE PIN</p>
+  </form>
+
   <div class="top">
     <div class="brand">TEREA<b>DARK RED</b></div>
     <div class="pick" role="group" aria-label="Výber hry">
@@ -82,6 +115,7 @@ body{background:radial-gradient(ellipse at 50% 60%,#2A1310,var(--bg) 70%);color:
 
   // celý tablet sa zmestí do voľného miesta, nikdy sa nezväčší nad skutočnú veľkosť
   function fit() {
+    if (matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches) return;
     const stage = tablet.parentElement.getBoundingClientRect();
     const w = tablet.offsetWidth + 20, h = tablet.offsetHeight + 20;   // + okraj rámu
     const k = Math.min(1, (stage.width - 32) / w, (stage.height - 32) / h);
@@ -90,8 +124,44 @@ body{background:radial-gradient(ellipse at 50% 60%,#2A1310,var(--bg) 70%);color:
   window.addEventListener('resize', fit);
   fit();
 
-  const first = location.hash.slice(1);
-  play(['draw', 'push', 'memorize', 'release'].includes(first) ? first : 'draw');
+  function start() {
+    const first = location.hash.slice(1);
+    play(['draw', 'push', 'memorize', 'release'].includes(first) ? first : 'draw');
+  }
+
+  // V zdroji je len odtlačok PIN-u, nie PIN sám. Po správnom zadaní si ho
+  // zariadenie zapamätá, aby sa na tablete nezadával pri každom spustení.
+  const PIN_HASH = '4259fd93fdbcef45ecb146d72962bbafcd11eeccb34ed7393d1485fdd04bc619';
+  const KEY = 'tdr-erik-pin';
+  const lock = document.getElementById('lock');
+  const pin = document.getElementById('pin');
+
+  async function sha256(s) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) { /* súkromné okno */ }
+  if (saved === PIN_HASH) {
+    start();
+  } else {
+    lock.hidden = false;
+    pin.focus();
+    pin.addEventListener('input', async () => {
+      lock.classList.remove('bad');
+      if (pin.value.length < 4) return;
+      if (await sha256(pin.value) === PIN_HASH) {
+        try { localStorage.setItem(KEY, PIN_HASH); } catch (e) { /* nevadí */ }
+        lock.hidden = true;
+        start();
+      } else {
+        lock.classList.add('bad');
+        pin.value = '';
+      }
+    });
+    lock.addEventListener('submit', (e) => e.preventDefault());
+  }
 </script>
 </body>
 </html>
