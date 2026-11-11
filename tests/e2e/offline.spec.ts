@@ -10,7 +10,7 @@ test.describe('offline', () => {
   test.describe.configure({ mode: 'serial' });
 
   test('po prvom načítaní nabehne aj bez siete', async ({ page, context }) => {
-    await page.goto(BUILT);
+    await page.goto(`${BUILT}/?predajna=1`);
     await expect(page.locator('[data-t="attract"]')).toBeVisible();
 
     await page.waitForFunction(
@@ -29,7 +29,7 @@ test.describe('offline', () => {
   });
 
   test('bez siete sa použije posledná známa konfigurácia', async ({ page, context }) => {
-    await page.goto(BUILT);
+    await page.goto(`${BUILT}/?predajna=1`);
     await expect(page.locator('[data-t="attract"]')).toBeVisible();
     await page.waitForFunction(
       () => navigator.serviceWorker.controller !== null, undefined, { timeout: 15_000 });

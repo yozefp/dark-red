@@ -111,12 +111,24 @@ dopĺňa build (`tools/gen-sw.mjs`), pretože mená nesú hash: pri prvej návš
 service worker ešte nebeží, takže by si ich sám nezachytil a tablet by pri
 výpadku wifi ukázal prázdnu stránku.
 
+## Adresy
+
+| adresa | čo ukáže |
+|---|---|
+| `/` v prehliadači | presmeruje na `/erik/` — výber hier pod PIN-om, pre ľudí s odkazom |
+| `/?predajna=1` | aplikácia do predajne s kódom — **z tejto adresy sa inštaluje na tablet** |
+| `/` ako nainštalovaná aplikácia | aplikácia do predajne (presmerovanie sa preskočí) |
+| `/test.html` | rozcestník s ladiacim panelom |
+
+Presmerovanie je skript v `index.html`. Odkazy s ľubovoľným parametrom
+(`?debug=1`, `?ukazka=1`, …) idú rovno do aplikácie.
+
 ## Tablety
 
 Natívna aplikácia nie je — ide o web, takže cez Business App Store netreba
 nič schvaľovať. Na mieste treba:
 
-- otvoriť adresu v prehliadači a pridať na plochu,
+- otvoriť `/?predajna=1` v prehliadači a pridať na plochu,
 - zapnúť **Guided Access** (iPad) alebo **pripnutie obrazovky** (Android),
 - zamknúť orientáciu na šírku, vypnúť automatické uspávanie,
 - nechať jas na maxime a tablet v nabíjačke.
