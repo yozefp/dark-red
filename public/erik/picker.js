@@ -158,6 +158,22 @@ body{background:radial-gradient(ellipse at 50% 60%,#2A1310,var(--bg) 70%);color:
     }, 30_000);
   }
 
+  /**
+   * Obrazovka nesmie zhasnúť, kým je hra otvorená. Inak by pripnutý Lenovo
+   * po časovom limite zhasol a odomykal sa PIN-om — a možnosti pre vývojárov
+   * (Nevypínať obrazovku) na niektorých kusoch nie sú. Prehliadač zámok pustí,
+   * keď sa stránka skryje, preto sa po návrate a po dotyku vyžiada znova.
+   */
+  let awake = null;
+  async function keepAwake() {
+    if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+    if (awake && !awake.released) return;
+    try { awake = await navigator.wakeLock.request('screen'); } catch (e) { /* nepodporované alebo zakázané */ }
+  }
+  keepAwake();
+  document.addEventListener('visibilitychange', keepAwake);
+  window.addEventListener('pointerdown', keepAwake, { passive: true });
+
   if (!usePin) { start(); return; }
 
   // V zdroji je len odtlačok PIN-u, nie PIN sám. Po správnom zadaní si ho
