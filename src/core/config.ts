@@ -147,8 +147,11 @@ async function fetchConfig(signal?: AbortSignal): Promise<Config> {
   try {
     const res = await fetch(`/config.json?t=${Date.now()}`, { signal, cache: 'no-store' });
     if (!res.ok) throw new Error(String(res.status));
-    const cfg = parseConfig(await res.json());
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(cfg)); } catch { /* súkromný režim */ }
+    const raw = await res.json();
+    const cfg = parseConfig(raw);
+    // Ukladá sa celý súbor aj s rozvrhom, nie vybraný týždeň — tablet bez
+    // wifi si tak ďalší týždeň vyberie sám podľa dátumu.
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(raw)); } catch { /* súkromný režim */ }
     return cfg;
   } catch {
     // bez siete použijeme poslednú známu, inak zabudovanú
