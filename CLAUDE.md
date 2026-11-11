@@ -64,9 +64,9 @@ Rozcestník všetkých hier je `http://localhost:5173/test.html`.
    tom istom odhade, ktorý pri MEMORIZE nefungoval. Ak prídu HTML/SVG
    exporty, prekresliť ich rovnako ako MEMORIZE a DRAW. Terč v RELEASE
    ešte kreslí starý tvar loga (`samplePath`).
-3. Nasadené na Cloudflare Pages (`dark-red.pages.dev`). Holá adresa je
-   aplikácia do predajne a z nej sa pridáva na plochu; výber hier je na
-   `/erik/` (tabuľka adries je v `README.md`).
+3. Nasadené na Cloudflare Pages (`dark-red.pages.dev`). Hlavná adresa je
+   výber hier (`public/erik/picker.js`) a z nej sa pridáva na plochu;
+   aplikácia s kódom je na `/?predajna=1` (tabuľka adries je v `README.md`).
 4. Potvrdenie tolerancií na cieľových tabletoch — model stále nevieme.
 5. Kódy v `public/config.json` sú vygenerované, treba ich potvrdiť s klientom.
 6. Znenie `MIMO PORADIA` je zmenené len v kóde; na vykreslených dizajnových

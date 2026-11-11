@@ -115,12 +115,14 @@ výpadku wifi ukázal prázdnu stránku.
 
 | adresa | čo ukáže |
 |---|---|
-| `/` | aplikácia do predajne s kódom — **z tejto adresy sa pridáva na plochu tabletu** |
-| `/erik/` | výber hier bez kódu, pod PIN-om, pre ľudí s odkazom |
+| `/` | výber štyroch hier bez kódu — **z tejto adresy sa pridáva na plochu tabletu**; adresa ostane čistá |
+| `/?predajna=1` | aplikácia do predajne s týždenným kódom |
+| `/erik/` | ten istý výber hier, pod PIN-om, s hrou v adrese (`#draw`) |
 | `/test.html` | rozcestník s ladiacim panelom |
 
-`/?predajna=1` ukáže to isté ako `/` — ostáva kvôli tabletom, ktoré sa z nej
-pridávali, kým holá adresa presmerovávala na `/erik/` (11. 11. 2026).
+Výber hier je `public/erik/picker.js`. Hlavná adresa bez parametrov ho
+načíta v `src/main.ts`, s ľubovoľným parametrom sa spustí aplikácia
+(`src/boot.ts`). Čo ukáže hlavná adresa, sa dá zmeniť na diaľku práve tam.
 
 ## Aktualizácia na diaľku
 
