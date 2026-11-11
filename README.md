@@ -115,13 +115,12 @@ výpadku wifi ukázal prázdnu stránku.
 
 | adresa | čo ukáže |
 |---|---|
-| `/` v prehliadači | presmeruje na `/erik/` — výber hier pod PIN-om, pre ľudí s odkazom |
-| `/?predajna=1` | aplikácia do predajne s kódom — **z tejto adresy sa inštaluje na tablet** |
-| `/` ako nainštalovaná aplikácia | aplikácia do predajne (presmerovanie sa preskočí) |
+| `/` | aplikácia do predajne s kódom — **z tejto adresy sa pridáva na plochu tabletu** |
+| `/erik/` | výber hier bez kódu, pod PIN-om, pre ľudí s odkazom |
 | `/test.html` | rozcestník s ladiacim panelom |
 
-Presmerovanie je skript v `index.html`. Odkazy s ľubovoľným parametrom
-(`?debug=1`, `?ukazka=1`, …) idú rovno do aplikácie.
+`/?predajna=1` ukáže to isté ako `/` — ostáva kvôli tabletom, ktoré sa z nej
+pridávali, kým holá adresa presmerovávala na `/erik/` (11. 11. 2026).
 
 ## Aktualizácia na diaľku
 
@@ -137,7 +136,7 @@ S `?debug=1` je to vypnuté.
 Natívna aplikácia nie je — ide o web, takže cez Business App Store netreba
 nič schvaľovať. Na mieste treba:
 
-- otvoriť `/?predajna=1` v prehliadači a pridať na plochu,
+- otvoriť `/` v prehliadači a pridať na plochu,
 - zapnúť **Guided Access** (iPad) alebo **pripnutie obrazovky** (Android),
 - zamknúť orientáciu na šírku, vypnúť automatické uspávanie,
 - nechať jas na maxime a tablet v nabíjačke.

@@ -4,16 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>TEREA DARK RED</title>
-<script>
-  // Holá adresa v prehliadači ukáže výber hier. Nainštalovaná aplikácia
-  // (tablet v predajni) aj odkazy s parametrami (?predajna=1, ?ukazka=1, …)
-  // idú rovno do aplikácie.
-  (function () {
-    var installed = navigator.standalone === true ||
-      matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;
-    if (location.pathname === '/' && !location.search && !installed) location.replace('/erik/');
-  })();
-</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DARK RED">

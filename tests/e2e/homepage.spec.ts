@@ -1,27 +1,16 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Holá adresa je pre ľudí s odkazom — ukáže výber hier. Tablet v predajni
- * sa inštaluje z ?predajna=1 a nainštalovaná aplikácia ide rovno do hry.
+ * Holá adresa je aplikácia do predajne — z nej sa pridáva na plochu.
+ * Výber hier bez kódu je na /erik/.
  */
-test('holá adresa v prehliadači presmeruje na výber hier', async ({ page }) => {
-  await page.goto('/');
-  await expect(page).toHaveURL(/\/erik\/$/);
-});
-
-test('?predajna=1 ostane v aplikácii', async ({ page }) => {
-  await page.goto('/?predajna=1');
-  await expect(page.locator('[data-t="attract"]')).toBeVisible();
-  await expect(page).toHaveURL(/\/\?predajna=1$/);
-});
-
-test('nainštalovaná aplikácia na holej adrese ostane v aplikácii', async ({ page }) => {
-  await page.addInitScript(() => {
-    const real = window.matchMedia.bind(window);
-    window.matchMedia = (q: string) =>
-      q.includes('display-mode') ? ({ ...real(q), matches: true } as MediaQueryList) : real(q);
-  });
+test('holá adresa ukáže aplikáciu do predajne', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('[data-t="attract"]')).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
+});
+
+test('?predajna=1 funguje ďalej, kvôli tabletom pridaným z nej', async ({ page }) => {
+  await page.goto('/?predajna=1');
+  await expect(page.locator('[data-t="attract"]')).toBeVisible();
 });
