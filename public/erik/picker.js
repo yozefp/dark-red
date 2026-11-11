@@ -79,7 +79,7 @@ body{background:radial-gradient(ellipse at 50% 60%,#2A1310,var(--bg) 70%);color:
     <p>ZADAJTE PIN</p>
   </form>
   <div class="top">
-    <div class="brand">TEREA<b>DARK RED</b></div>
+    <div class="brand">TEREA<b>DARK RED</b><b style="color:#E02A26">TEST 2</b></div>
     <div class="pick" role="group" aria-label="Výber hry">
       <button data-game="draw">DRAW</button>
       <button data-game="push">PUSH</button>
