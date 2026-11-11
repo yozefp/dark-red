@@ -80,7 +80,7 @@ export function createDrawGame(): GameModule {
   };
 
   function begin(p: Point, t: number) {
-    if (dist(p, path[0]) > START_RADIUS) { stage.setHint('Začni pri krúžku.'); return; }
+    if (dist(p, path[0]) > START_RADIUS) { stage.setHint(COPY.games.draw.hintStart); return; }
     drawing = true; samples = [s0(p, t)]; finger = p;
     stage.setHint('');
   }
@@ -112,12 +112,12 @@ export function createDrawGame(): GameModule {
     samples = []; drawing = false; isOff = false; finger = null; score = null;
     renderer.reset();
     stage.setStatus(COPY.games.draw.status, '0 %');
-    stage.setHint('Prilož prst na krúžok a obkresli tvar.');
+    stage.setHint(COPY.games.draw.hint);
   }
 
   function paintStatus() {
     if (!score) return;
-    if (isOff) stage.setStatus('MIMO LÍNIE', undefined, true);
+    if (isOff) stage.setStatus(COPY.games.draw.roundLose, undefined, true);
     else stage.setStatus(COPY.games.draw.status, `${Math.round(score.score * 100)} %`);
   }
 

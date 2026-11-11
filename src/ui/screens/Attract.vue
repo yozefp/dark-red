@@ -28,6 +28,12 @@ const emit = defineEmits<{ start: [] }>();
 </template>
 
 <style scoped>
+/* Nadpis z wordingu je dlhý — dostane širší stĺpec a na širších displejoch
+   (Lenovo 16:10) sa písmo riadi aj výškou. Na iPade 4:3 je veľkosť rovnaká
+   ako doteraz: 10,1vh = 7,6vw pri pomere 4:3. */
+.attract .split{grid-template-columns:1.5fr .5fr}
+.attract .split__text{max-width:none}
+.attract .h1--hero{font-size:min(var(--fs-hero),10.1vh)}
 .attract__cta{display:flex;align-items:center;gap:1.4vw;margin-top:4vw;
   font-size:var(--fs-cta);letter-spacing:.22em;text-transform:uppercase;color:var(--text)}
 .attract__note{position:absolute;left:calc(var(--gut) + var(--safe-l));

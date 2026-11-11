@@ -50,7 +50,7 @@ export function createMemorizeGame(): GameModule {
       detach = attachPointer(stage.canvas, { onDown: tap, onMove: () => {}, onUp: () => {} });
       window.addEventListener('resize', onResize);
 
-      stage.setHint('Sleduj poradie, potom ho zopakuj.');
+      stage.setHint(COPY.games.memorize.hintWatch);
       loop();
       after(600, playback);
 
@@ -105,7 +105,7 @@ export function createMemorizeGame(): GameModule {
     after(420, () => {
       phase = 'input';
       paintStatus();
-      stage.setHint('Ťukni na lupene v tom istom poradí.');
+      stage.setHint(COPY.games.memorize.hint);
     });
   }
 

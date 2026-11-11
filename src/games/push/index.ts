@@ -107,8 +107,8 @@ export function createPushGame(): GameModule {
     paintScale(SCALE_LOW);
     paintBand();
     paint();
-    shell.setStatus('INTENZITA', '0 %');
-    shell.setHint('Prilož prst a drž. Pusť na stodesiatich.');
+    shell.setStatus(COPY.games.push.status, '0 %');
+    shell.setHint(COPY.games.push.hint);
   }
 
   function press() {
@@ -116,7 +116,7 @@ export function createPushGame(): GameModule {
     holding = true;
     lastT = performance.now();
     el.root.classList.add('push--hold');
-    shell.setHint('Zrýchľuje to. Pusť na stodesiatich.');
+    shell.setHint(COPY.games.push.hintHold);
   }
 
   function release() {
@@ -132,7 +132,7 @@ export function createPushGame(): GameModule {
     el.root.classList.add('push--over');
     paintScale(SCALE_HIGH);
     paintBand();
-    shell.setHint('Strop prerazený. Pusť na stodesiatich.');
+    shell.setHint(COPY.games.push.hintOver);
 
     gsap.fromTo(el.meter, { x: -7 },
       { x: 0, duration: 0.42, ease: 'elastic.out(1,0.3)' });
@@ -174,7 +174,7 @@ export function createPushGame(): GameModule {
     el.fill.style.opacity = over ? '1' : String(0.35 + 0.65 * f);
     const shown = Math.round(value);
     el.num.textContent = String(shown);
-    shell.setStatus('INTENZITA', `${shown} %`);
+    shell.setStatus(COPY.games.push.status, `${shown} %`);
   }
 
   function finish(r: PushScore) {
@@ -189,7 +189,7 @@ export function createPushGame(): GameModule {
     shell.flash(r.passed ? COPY.games.push.roundWin : label(r), r.passed, { y: 79 });
     shell.setHint(r.passed
       ? `<b style="color:var(--amber)">${COPY.games.push.roundWin} — ${shown} %</b>`
-      : `<b style="color:var(--red)">${label(r)} — ${shown} %</b>`);
+      : `<b style="color:var(--red)">${shown} %</b> — ${r.late ? COPY.games.push.lateHint : COPY.games.push.earlyHint}`);
 
     const res: RoundResult = {
       round: round.round,

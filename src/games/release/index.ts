@@ -64,7 +64,7 @@ export function createReleaseGame(): GameModule {
       window.addEventListener('resize', onResize);
 
       paintStatus();
-      stage.setHint('Potiahni od krúžku dozadu a pusť.');
+      stage.setHint(COPY.games.release.hint);
       loop();
 
       publishProbe({
@@ -150,7 +150,7 @@ export function createReleaseGame(): GameModule {
 
   /** Vzdialenosť pre hráča; mimo terča už milimetre nič nehovoria. */
   function distText(d: number): string {
-    return d > outerR ? 'mimo terča' : `${toMm(d)} mm od stredu`;
+    return d > outerR ? COPY.games.release.offTarget : `${toMm(d)} mm od stredu`;
   }
 
   function landed() {
@@ -160,8 +160,10 @@ export function createReleaseGame(): GameModule {
     // po zásahu na chvíľu ukázalo ďalší hod, ktorý už nepríde
     if (shots.length >= cfg.throws || r.passed) { finish(r.passed); return; }
     paintStatus();
-    const t = distText(shots[shots.length - 1].distance);
-    stage.setHint(`${t[0].toUpperCase()}${t.slice(1)}. Skús znova.`);
+    const d = shots[shots.length - 1].distance;
+    stage.setHint(d > outerR
+      ? `${COPY.games.release.offTargetHint} Skús znova.`
+      : `${toMm(d)} mm od stredu. Skús znova.`);
   }
 
   /**
@@ -185,11 +187,15 @@ export function createReleaseGame(): GameModule {
     const r = scoreRelease(shots, cfg);
     const mm = toMm(r.best);
     // medzi terčom a krúžkom, kde nič iné nie je
-    stage.flash(passed ? COPY.games.release.roundWin : COPY.games.release.roundLose, passed,
-      { sub: distText(r.best), y: 41 });
+    const c = COPY.games.release;
+    const allOff = !passed && r.best > outerR;
+    stage.flash(passed ? c.roundWin : allOff ? c.roundOff : c.roundLose, passed,
+      { sub: allOff ? undefined : distText(r.best), y: 41 });
     stage.setHint(passed
-      ? `<b style="color:var(--amber)">${COPY.games.release.roundWin} — ${distText(r.best)}</b>`
-      : `<b style="color:var(--red)">${COPY.games.release.roundLose} — ${distText(r.best)}</b>`);
+      ? `<b style="color:var(--amber)">${c.roundWin} — ${distText(r.best)}</b>`
+      : allOff
+        ? `<b style="color:var(--red)">${c.allOff}</b>`
+        : `<b style="color:var(--red)">${c.roundLose} — ${distText(r.best)}</b>`);
 
     const res: RoundResult = {
       round: round.round,
@@ -198,7 +204,7 @@ export function createReleaseGame(): GameModule {
       value: String(mm),
       unit: 'mm od stredu',
       detail: passed ? undefined
-        : r.best > outerR ? 'všetky hody boli mimo terča' : `najbližší hod bol ${mm} mm od stredu`,
+        : r.best > outerR ? COPY.games.release.allOff : `najbližší hod bol ${mm} mm od stredu`,
       // v násobkoch polomeru terča, nie v pixeloch — výsledok kreslí svoj vlastný
       visual: {
         game: 'release',

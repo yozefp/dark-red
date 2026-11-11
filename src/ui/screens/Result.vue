@@ -78,6 +78,11 @@ onMounted(() => {
 .res--inside{display:flex;align-items:center;justify-content:center}
 .res--inside .res__txt{position:relative;text-align:center;max-width:44%}
 .res--inside .res__body{margin-top:1.1vw}
+/* dlhší nadpis by v obryse prešiel cez čiaru trojuholníka */
+/* obrys sa riadi výškou, takže na širšom Lenove je užší — preto aj vh;
+   na iPade 4:3 platí prvá hodnota */
+.res--inside .h1{font-size:min(calc(.72 * var(--fs-h1)),5.3vh)}
+.res--inside .res__txt{max-width:min(36%,48vh);transform:translateY(9%)}
 
 /* kvet nad textom */
 .res--above{display:flex;flex-direction:column;align-items:center;justify-content:center;

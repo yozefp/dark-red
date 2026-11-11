@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { parseConfig } from '../../src/core/config';
+import { COPY } from '../../src/ui/copy';
 
 // cez tú istú funkciu, akú používa aplikácia — rozvrh aj tu vyberie dnešný týždeň
 const cfg = parseConfig(
@@ -89,7 +90,7 @@ test.describe('MEMORIZE', () => {
     const hned = await jas();
 
     // po celom zopakovanom poradí musí byť odpoveď veľkým nad kvetom
-    await expect(page.locator('.g__flash.ok')).toHaveText('SPRÁVNE');
+    await expect(page.locator('.g__flash.ok')).toHaveText(COPY.games.memorize.flashOk);
     await expect(page.locator('.g__status .dot--done')).toHaveCount(seq.length);
     await expect(page.locator('.g__status .dot--bad')).toHaveCount(0);
 
@@ -113,7 +114,7 @@ test.describe('MEMORIZE', () => {
     }, (seq[0] + 1) % 4);
 
     // chybný krok sa musí okamžite ukázať veľkým nad kvetom
-    await expect(page.locator('.g__flash.bad')).toHaveText('CHYBA');
+    await expect(page.locator('.g__flash.bad')).toHaveText(COPY.games.memorize.flashBad);
     await expect(page.locator('.g__status .dot--bad')).toHaveCount(1);
 
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
