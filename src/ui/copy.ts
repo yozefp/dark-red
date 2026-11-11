@@ -18,7 +18,7 @@ export const COPY = {
   brand: { name: 'T E R E A', product: 'DARK RED' },
 
   attract: {
-    headline: 'TEST AKTUALIZÁCIE 2 — FUNGUJE',
+    headline: 'Objav, čo sa skrýva za dverami',
     body: 'Zapoj sa do súťaže o IQOS ILUMA i',
     body2: 'a balenia TEREA ',
     body3: 'DARK RED',
