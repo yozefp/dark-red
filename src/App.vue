@@ -3,6 +3,7 @@ import { onMounted, onBeforeUnmount, ref, computed, shallowRef, watch } from 'vu
 import { state, go, setConfig, addRound, finish, reportError } from '@/core/machine';
 import { loadConfig, skipCode } from '@/core/config';
 import { startIdleWatch } from '@/core/idle';
+import { startUpdateWatch } from '@/core/update';
 import { suppressBrowserGestures } from '@/core/input';
 import { COPY } from '@/ui/copy';
 import type { GameModule, RoundConfig, RoundResult } from '@/core/types';
@@ -30,6 +31,7 @@ const game = shallowRef<GameModule | null>(null);
 const round = ref(1);
 const last = ref<RoundResult | null>(null);
 let stopIdle: (() => void) | null = null;
+let stopUpdate: (() => void) | null = null;
 
 const cfg = computed(() => state.config);
 const roundCfg = computed<RoundConfig>(() => ({
@@ -43,8 +45,12 @@ onMounted(async () => {
   suppressBrowserGestures();
   try { setConfig(await loadConfig()); } catch (e) { reportError(e); }
   stopIdle = startIdleWatch();
+  // pri ladení (?debug=1) by obnovenie prekážalo; vo vývoji nie je service worker
+  if (import.meta.env.PROD && !new URLSearchParams(location.search).has('debug')) {
+    stopUpdate = startUpdateWatch();
+  }
 });
-onBeforeUnmount(() => stopIdle?.());
+onBeforeUnmount(() => { stopIdle?.(); stopUpdate?.(); });
 
 function onCodeOk() { round.value = 1; go('tutorial'); }
 

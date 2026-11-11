@@ -123,6 +123,15 @@ výpadku wifi ukázal prázdnu stránku.
 Presmerovanie je skript v `index.html`. Odkazy s ľubovoľným parametrom
 (`?debug=1`, `?ukazka=1`, …) idú rovno do aplikácie.
 
+## Aktualizácia na diaľku
+
+Po pushnutí Cloudflare nasadí novú verziu a tablety si ju stiahnu samy
+(`src/core/update.ts`). Tablet každých 10 minút skontroluje, či je nová
+verzia aplikácie alebo iná platná konfigurácia (zmena v `config.json` aj
+prelom týždňa). Ak áno, obnoví sa, **len keď je na úvodnej obrazovke
+a 5 minút sa ho nikto nedotkol**. Počas hry, kódu ani výsledku nikdy.
+S `?debug=1` je to vypnuté.
+
 ## Tablety
 
 Natívna aplikácia nie je — ide o web, takže cez Business App Store netreba
