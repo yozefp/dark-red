@@ -28,13 +28,22 @@ describe('PUSH — bodovanie', () => {
     expect(s.passed).toBe(false);
   });
 
-  it('vyhráva sa medzi 105 a 115 v každom kole aj obtiažnosti', () => {
+  it('vyhráva sa medzi 108 a 112 v každom kole aj obtiažnosti (klientka 16. 11.)', () => {
     for (const d of ['easy', 'standard', 'hard']) for (const r of [1, 2, 3]) {
       const cfg = configFor(d, r);
-      expect(scorePush(105, cfg).passed).toBe(true);
-      expect(scorePush(115, cfg).passed).toBe(true);
-      expect(scorePush(104.8, cfg).passed).toBe(false);
-      expect(scorePush(115.2, cfg).passed).toBe(false);
+      expect(scorePush(108, cfg).passed).toBe(true);
+      expect(scorePush(112, cfg).passed).toBe(true);
+      expect(scorePush(107.8, cfg).passed).toBe(false);
+      expect(scorePush(112.2, cfg).passed).toBe(false);
+      // tu sa to celé začalo — 114 ukazovalo „Yes! Máš to.“
+      expect(scorePush(114, cfg).passed).toBe(false);
+      expect(scorePush(114, cfg).late).toBe(true);
+    }
+  });
+
+  it('na každej obtiažnosti meter stále zrýchľuje — rýchlosť pri 110 nie je pod štartom', () => {
+    for (const d of ['easy', 'standard', 'hard']) for (const r of [1, 2, 3]) {
+      expect(configFor(d, r).rateAtTarget).toBeGreaterThanOrEqual(configFor(d, r).rateStart);
     }
   });
 
@@ -68,7 +77,8 @@ describe('PUSH — bodovanie', () => {
   it('každé kolo dá menej času v pásme — prvé je mäkké, tretie rozhoduje', () => {
     // čas v pásme = šírka pásma / rýchlosť pri 110
     const window = (r: number) => (2 * std(r).band) / std(r).rateAtTarget;
-    expect(window(1)).toBeGreaterThanOrEqual(0.4);
+    // pásmo je užšie, preto pomalší meter — v treťom kole aspoň 0,15 s
+    expect(window(1)).toBeGreaterThanOrEqual(0.3);
     expect(window(2)).toBeLessThan(window(1));
     expect(window(3)).toBeLessThan(window(2));
     expect(window(3)).toBeGreaterThan(0.15);
@@ -84,13 +94,13 @@ describe('PUSH — bodovanie', () => {
     expect(Math.abs(a - b)).toBeLessThan(0.5);
   });
 
-  it('na 110 sa dá dostať za tri a pol až šesť sekúnd', () => {
+  it('na 110 sa dá dostať za päť až deväť sekúnd', () => {
     for (const r of [1, 2, 3]) {
       const cfg = std(r);
       let v = 0, t = 0;
       while (v < TARGET && t < 20_000) { v = advance(v, 16, cfg); t += 16; }
-      expect(t).toBeGreaterThan(3500);
-      expect(t).toBeLessThan(6000);
+      expect(t).toBeGreaterThan(5000);
+      expect(t).toBeLessThan(9000);
     }
   });
 });

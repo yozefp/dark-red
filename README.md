@@ -115,14 +115,13 @@ výpadku wifi ukázal prázdnu stránku.
 
 | adresa | čo ukáže |
 |---|---|
-| `/` | výber štyroch hier bez kódu — **z tejto adresy sa pridáva na plochu tabletu**; adresa ostane čistá |
-| `/?predajna=1` | aplikácia do predajne s týždenným kódom |
-| `/erik/` | ten istý výber hier, pod PIN-om, s hrou v adrese (`#draw`) |
+| `/` | aplikácia s kódom — **z tejto adresy sú tablety na prevádzkach**; hra podľa rozvrhu, bez prepínača |
+| `/vecierok/` | všetky štyri hry naraz, bez kódu a bez PIN-u — vianočný večierok PMI 3. 12. |
+| `/erik/` | ten istý výber hier pod PIN-om, s hrou v adrese (`#draw`) |
 | `/test.html` | rozcestník s ladiacim panelom |
 
-Výber hier je `public/erik/picker.js`. Hlavná adresa bez parametrov ho
-načíta v `src/main.ts`, s ľubovoľným parametrom sa spustí aplikácia
-(`src/boot.ts`). Čo ukáže hlavná adresa, sa dá zmeniť na diaľku práve tam.
+Výber hier je `public/erik/picker.js`, používajú ho `/vecierok/` aj `/erik/`.
+`/?predajna=1` ukáže to isté ako `/` — ostáva kvôli starším ikonám.
 
 ## Aktualizácia na diaľku
 

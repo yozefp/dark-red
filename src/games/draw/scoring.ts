@@ -26,9 +26,10 @@ export interface DrawConfig {
  * ťahov: prvé kolo prejde aj s chvením 30 px, tretie potrebuje asi 15 px.
  */
 export const DIFFICULTY: Record<string, number[]> = {
-  easy:     [52, 37, 26],
-  standard: [42, 29, 20],
-  hard:     [33, 23, 16],
+  // klientka 16. 11.: DRAW sťažiť — štandard je doterajší hard
+  easy:     [42, 29, 20],
+  standard: [33, 23, 16],
+  hard:     [27, 19, 13],
 };
 
 export interface DrawScore {

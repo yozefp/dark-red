@@ -16,7 +16,7 @@ async function spy(page: Page) {
 
 test('výber hier si pýta zámok obrazovky', async ({ page }) => {
   await spy(page);
-  await page.goto('/');
+  await page.goto('/vecierok/index.html');
   await expect(page.locator('.pick button')).toHaveCount(4);
   await expect.poll(() => page.evaluate(() => (window as any).__wake)).toBeGreaterThan(0);
 });

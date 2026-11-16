@@ -65,7 +65,7 @@ export function parseConfig(raw: unknown, day = today()): Config {
 
   return {
     week: typeof o.week === 'string' ? o.week : FALLBACK.week,
-    code: /^\d{6}$/.test(String(o.code)) ? String(o.code) : FALLBACK.code,
+    code: /^\d{4,8}$/.test(String(o.code)) ? String(o.code) : FALLBACK.code,
     game: GAMES.includes(o.game as GameId) ? (o.game as GameId) : FALLBACK.game,
     difficulty:
       o.difficulty === 'easy' || o.difficulty === 'hard' ? o.difficulty : 'standard',

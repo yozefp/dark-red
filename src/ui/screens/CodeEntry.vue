@@ -6,7 +6,8 @@ import Header from '../components/Header.vue';
 const props = defineProps<{ expected: string }>();
 const emit = defineEmits<{ ok: [] }>();
 
-const LEN = 6;
+/** počet políčok podľa kódu z rozvrhu (kampaň má štvormiestny 2511) */
+const LEN = Math.max(4, props.expected.length);
 const digits = ref<string[]>([]);
 const wrong = ref(false);
 const accepted = ref(false);

@@ -19,9 +19,10 @@ export const COPY = {
 
   attract: {
     headline: 'Objav, čo sa skrýva za dverami',
-    body: 'Zapoj sa do súťaže o IQOS ILUMA i',
-    body2: 'a balenia TEREA ',
-    body3: 'DARK RED',
+    // klientka 16. 11.: výhry sú aj Apple, sampling TEREA končí 25. 11.
+    body: 'Zapoj sa do súťaže o IQOS ILUMA,',
+    body2: 'APPLE WATCH SERIES 12 a APPLE IPHONE 18 PRO',
+    body3: '',
     cta: 'Dotykom spusti hru',
     note: 'Každý týždeň ťa čaká nová hra',
   },

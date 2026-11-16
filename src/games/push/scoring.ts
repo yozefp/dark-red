@@ -11,20 +11,22 @@ export const TARGET = 110;
 export const BURN = 120;
 
 /**
- * Polovičná šírka výherného pásma: vyhráva sa medzi 105 a 115, v každom
- * kole aj obtiažnosti rovnako (Jozef, 20. 10.). Obtiažnosť robí rýchlosť.
+ * Polovičná šírka výherného pásma: vyhráva sa medzi 108 a 112, v každom
+ * kole aj obtiažnosti rovnako (klientka 16. 11.; predtým 105–115).
+ * Obtiažnosť robí rýchlosť.
  */
-export const BAND = 5;
+export const BAND = 2;
 
 /**
- * Rýchlosť metra pri 110 po kolách, % za sekundu. S pevným pásmom dáva
- * čas, počas ktorého je meter v pásme — na štandarde 0,40 s, 0,29 s
- * a 0,21 s. Prvé kolo prejde takmer každý, tretie rozhoduje.
+ * Rýchlosť metra pri 110 po kolách, % za sekundu. S pásmom 108–112 je
+ * meter v pásme na štandarde 0,31 s, 0,22 s a 0,16 s. Pri pôvodných
+ * rýchlostiach (25/34/48) by to bolo 0,16/0,12/0,08 s — prstom netrafiteľné.
+ * Nesmie klesnúť pod RATE_START, inak by meter spomaľoval.
  */
 export const DIFFICULTY: Record<string, number[]> = {
-  easy:     [22, 28, 38],
-  standard: [25, 34, 48],
-  hard:     [30, 42, 60],
+  easy:     [12, 16, 21],
+  standard: [13, 18, 25],
+  hard:     [16, 22, 30],
 };
 
 export interface PushConfig {

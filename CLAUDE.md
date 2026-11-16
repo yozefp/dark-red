@@ -65,8 +65,10 @@ Rozcestník všetkých hier je `http://localhost:5173/test.html`.
    exporty, prekresliť ich rovnako ako MEMORIZE a DRAW. Terč v RELEASE
    ešte kreslí starý tvar loga (`samplePath`).
 3. Nasadené na Cloudflare Pages (`dark-red.pages.dev`). Hlavná adresa je
-   výber hier (`public/erik/picker.js`) a z nej sa pridáva na plochu;
-   aplikácia s kódom je na `/?predajna=1` (tabuľka adries je v `README.md`).
+   aplikácia s kódom (2511) a hrou podľa rozvrhu, z nej sú tablety na
+   prevádzkach. Všetky hry naraz sú na `/vecierok/` (tabuľka v `README.md`).
+   Feedback klientky 16. 11.: PUSH pásmo 108–112 a pomalší meter, DRAW
+   tolerancia o štvrtinu užšia — na reálnom tablete ešte neodohrané.
 4. Potvrdenie tolerancií na cieľových tabletoch — model stále nevieme.
 5. Kódy v `public/config.json` sú vygenerované, treba ich potvrdiť s klientom.
 6. Znenie `MIMO PORADIA` je zmenené len v kóde; na vykreslených dizajnových

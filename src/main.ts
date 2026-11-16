@@ -1,18 +1,10 @@
 /**
- * Hlavná adresa bez parametrov ukáže výber hier (public/erik/picker.js) —
- * odtiaľ sa pridáva na plochu tabletu. S parametrom (?predajna=1, ?ukazka=1,
- * ?debug=1, …) sa spustí aplikácia s hrami. Tá sa načíta dynamicky, aby jej
- * štýly nezasahovali do výberu hier.
+ * Hlavná adresa je aplikácia s kódom — z nej sú tablety pridané na plochu
+ * (od 16. 11. 2026, predtým tu bol výber hier). Výber všetkých hier je na
+ * /vecierok/ a /erik/ (public/erik/picker.js). Aplikácia sa načíta dynamicky,
+ * aby jej štýly nezasahovali do výberu hier.
  */
-const home = location.pathname === '/' && !location.search;
-
-if (home) {
-  const s = document.createElement('script');
-  s.src = '/erik/picker.js';
-  document.head.append(s);
-} else {
-  import('./boot');
-}
+import('./boot');
 
 // Offline vrstva. Vo vývoji by len prekážala — service worker by podával
 // staré súbory namiesto tých, ktoré sa práve menia.

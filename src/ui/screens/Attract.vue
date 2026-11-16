@@ -13,8 +13,8 @@ const emit = defineEmits<{ start: [] }>();
         <h1 class="h1 h1--hero">{{ COPY.attract.headline }}</h1>
         <div class="rule" />
         <p class="body">
-          {{ COPY.attract.body }}<br>{{ COPY.attract.body2 }}
-          <span class="hl">{{ COPY.attract.body3 }}</span>.
+          {{ COPY.attract.body }}<br>{{ COPY.attract.body2 }}<span
+            v-if="COPY.attract.body3" class="hl">{{ COPY.attract.body3 }}</span>.
         </p>
         <div class="attract__cta">
           <span class="attract__dot" />
