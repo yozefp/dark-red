@@ -18,10 +18,10 @@ export const COPY = {
   brand: { name: 'T E R E A', product: 'DARK RED' },
 
   attract: {
-    headline: 'Objav, čo sa skrýva za dverami',
-    // klientka 16. 11.: výhry sú aj Apple, sampling TEREA končí 25. 11.
-    body: 'Zapoj sa do súťaže o IQOS ILUMA,',
-    body2: 'APPLE WATCH SERIES 12 a APPLE IPHONE 18 PRO',
+    // klientka 18. 11.
+    headline: 'Odomkni hru týždňa',
+    body: 'Zapoj sa do súťaže o iPhone 18 Pro alebo',
+    body2: 'Apple Watch Series 12 s IQOS ILUMA i UNLOCK',
     body3: '',
     cta: 'Dotykom spusti hru',
     note: 'Každý týždeň ťa čaká nová hra',
