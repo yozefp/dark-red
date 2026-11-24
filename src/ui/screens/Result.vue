@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, computed } from 'vue';
 import { COPY } from '../copy';
 import Header from '../components/Header.vue';
 import ResultVisual from '../components/ResultVisual.vue';
@@ -25,11 +25,8 @@ const layout = computed(() => {
   return { draw: 'inside', memorize: 'above', push: 'side', release: 'side' }[props.visual.game];
 });
 
-const barWidth = ref('100%');
-onMounted(() => {
-  requestAnimationFrame(() => { barWidth.value = '0%'; });
-  setTimeout(() => emit('done'), props.timeoutMs);
-});
+// Odpočet sa nezobrazuje (klientka 24. 11.) — po čase sa tablet ticho vráti na úvod.
+onMounted(() => { setTimeout(() => emit('done'), props.timeoutMs); });
 </script>
 
 <template>
@@ -47,7 +44,8 @@ onMounted(() => {
         <div v-if="value" class="val res__val" :class="{ lose: !won }">
           {{ value }}<small v-if="unit">{{ unit }}</small>
         </div>
-        <p class="body res__body">{{ won ? COPY.result.winBody : COPY.result.loseBody }}</p>
+        <p v-if="won ? COPY.result.winBody : COPY.result.loseBody" class="body res__body">
+          {{ won ? COPY.result.winBody : COPY.result.loseBody }}</p>
         <p v-if="detail" class="note res__detail">{{ detail }}</p>
         <p v-if="!won && visual?.game === 'memorize'" class="note res__legend">
           <span class="sw sw--red" />tvoj výber
@@ -56,7 +54,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="timebar" :style="{ width: barWidth, transitionDuration: timeoutMs + 'ms' }" />
   </div>
 </template>
 

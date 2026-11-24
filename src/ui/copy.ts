@@ -107,11 +107,13 @@ export const COPY = {
     win: 'Yes! Máš to.',
     lose: 'Tentokrát ti to nevyšlo.',
     winBody: 'Ukáž svoje skóre obsluhe',
-    loseBody: 'Chceš to skúsiť znovu? O ďalší pokus požiadaj obsluhu.',
+    // klientka 24. 11.: pri prehre len „nevyšlo to“, žiadna výzva na ďalší pokus
+    loseBody: '',
   },
 
   misc: {
     round: (a: number, b: number) => `KOLO ${a} / ${b}`,
+    attempt: (a: number, b: number) => `POKUS ${a} / ${b}`,
     /** 1 krok, 2–4 kroky, 5+ krokov */
     steps: (n: number) => `${n} ${n === 1 ? 'krok' : n < 5 ? 'kroky' : 'krokov'}`,
   },

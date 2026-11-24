@@ -79,17 +79,22 @@ function startGame() {
   go('playing');
 }
 
+/** Výhra ostane dlhšie, aby ju hráč stihol ukázať obsluhe (klientka 24. 11.). */
+const WIN_TIMEOUT_MS = 30_000;
+
 function onRoundEnd(r: RoundResult) {
   last.value = r;
   addRound(r);
   // kolo bežalo do konca — po krátkej pauze buď ďalšie kolo, alebo výsledok
+  const attempts = !!game.value?.attempts;
   setTimeout(() => {
-    if (r.passed && round.value < cfg.value.rounds) {
+    // kolá idú ďalej po úspechu; pri pokusoch naopak po neúspechu
+    if (r.passed !== attempts && round.value < cfg.value.rounds) {
       round.value++;
       game.value = GAMES[cfg.value.game]();     // čistý modul na nové kolo
       return;
     }
-    finish();
+    finish(attempts ? 'any' : 'all');
     go('result');
   }, 1500);
 }
@@ -123,7 +128,7 @@ const resultUnit = computed(() => last.value?.unit ?? '%');
           :value="resultValue" :unit="resultUnit"
           :detail="state.summary?.passed ? undefined : last?.detail"
           :visual="last?.visual"
-          :timeout-ms="cfg.resultTimeoutMs"
+          :timeout-ms="state.summary?.passed ? WIN_TIMEOUT_MS : cfg.resultTimeoutMs"
           @done="go('attract')" />
 
   <DevPanel />

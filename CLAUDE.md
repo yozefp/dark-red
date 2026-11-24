@@ -56,10 +56,10 @@ Rozcestník všetkých hier je `http://localhost:5173/test.html`.
 
 ## Čo ostáva
 
-1. Drobnosti v kóde (navrhnuté, Jozef sa k nim ešte nevyjadril):
-   `onRoundEnd` v `App.vue` má nezrušený `setTimeout`; výsledkovka má dva
-   odpočty naraz (`Result.vue` aj `idle.ts`); `scheduleReturn` v `idle.ts`
-   je mŕtvy kód.
+1. Drobnosť v kóde: `onRoundEnd` v `App.vue` má nezrušený `setTimeout`.
+   Výsledkovku vracia na úvod len `Result.vue` (výhra 30 s, prehra 15 s,
+   bez viditeľného odpočtu), `idle.ts` ju od 24. 11. vynecháva. PUSH má
+   od 24. 11. tri pokusy rovnakou rýchlosťou, stačí jeden (`attempts`).
 2. PUSH a RELEASE sú postavené na statických PNG referenciách, čiže na
    tom istom odhade, ktorý pri MEMORIZE nefungoval. Ak prídu HTML/SVG
    exporty, prekresliť ich rovnako ako MEMORIZE a DRAW. Terč v RELEASE

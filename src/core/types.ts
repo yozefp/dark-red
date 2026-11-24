@@ -73,6 +73,11 @@ export interface GameModule {
   id: GameId;
   /** čitateľný názov pre vývojový panel */
   label: string;
+  /**
+   * Kolá sú pokusy: hra končí prvým úspechom a vyhráva, ak vyšiel aspoň
+   * jeden. Bez toho treba prejsť všetky kolá a prvá chyba hru ukončí.
+   */
+  attempts?: boolean;
   mount(root: HTMLElement, cfg: RoundConfig): void;
   /** hra zavolá, keď kolo skončí */
   onRoundEnd?: (r: RoundResult) => void;

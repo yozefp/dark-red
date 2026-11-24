@@ -65,6 +65,48 @@ test.describe('PUSH', () => {
   });
 });
 
+test.describe('PUSH — tri pokusy', () => {
+  /** jeden pokus: pustí pred stovkou (zle) alebo v pásme (dobre) */
+  async function attempt(page: Page, hit: boolean) {
+    await page.waitForFunction(() => Boolean(window.__tdr?.probe?.info()));
+    const area = (await page.locator('.g__area').boundingBox())!;
+    await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+    await page.mouse.down();
+    if (hit) {
+      await page.waitForFunction(() => {
+        const i = window.__tdr.probe.info();
+        return i.over && Math.abs(i.value - i.target) < i.band * 0.6;
+      }, undefined, { timeout: 15_000 });
+    } else {
+      await page.waitForFunction(() => window.__tdr.probe.info().value > 40);
+    }
+    await page.mouse.up();
+  }
+
+  test('chyba nekončí hru, druhý úspešný pokus vyhráva', async ({ page }) => {
+    await play(page, 'push', { rounds: 3 });
+    await expect(page.locator('[data-t="playing"]')).toContainText('POKUS 1 / 3');
+    await attempt(page, false);
+    await expect(page.locator('[data-t="playing"]')).toContainText('POKUS 2 / 3', { timeout: 5_000 });
+    await attempt(page, true);
+    await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('[data-t="result"]')).toContainText(COPY.result.win);
+  });
+
+  test('tri chyby prehrajú, bez výzvy na ďalší pokus a bez odpočtu', async ({ page }) => {
+    await play(page, 'push', { rounds: 3 });
+    for (let i = 0; i < 3; i++) {
+      await expect(page.locator('[data-t="playing"]')).toContainText(`POKUS ${i + 1} / 3`, { timeout: 5_000 });
+      await attempt(page, false);
+    }
+    const res = page.locator('[data-t="result"]');
+    await expect(res).toBeVisible({ timeout: 20_000 });
+    await expect(res).toContainText(COPY.result.lose);
+    await expect(res).not.toContainText(/obsluh|pokus/i);
+    await expect(page.locator('.timebar')).toHaveCount(0);
+  });
+});
+
 test.describe('MEMORIZE', () => {
   test('správne zopakované poradie prejde', async ({ page }) => {
     await play(page, 'memorize');

@@ -15,7 +15,8 @@ onMounted(() => {
   if (!host.value) return;
   props.game.onRoundEnd = (r) => emit('roundEnd', r);
   props.game.mount(host.value, props.round);
-  status.value = COPY.misc.round(props.round.round, props.round.totalRounds);
+  const label = props.game.attempts ? COPY.misc.attempt : COPY.misc.round;
+  status.value = label(props.round.round, props.round.totalRounds);
 });
 onBeforeUnmount(() => props.game.destroy());
 </script>

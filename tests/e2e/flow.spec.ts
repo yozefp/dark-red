@@ -1,3 +1,4 @@
+import { COPY } from '../../src/ui/copy';
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { parseConfig } from '../../src/core/config';
@@ -103,11 +104,26 @@ test('nečinnosť vráti tablet na úvodnú obrazovku', async ({ page }) => {
   await expect(page.locator('[data-t="attract"]')).toBeVisible({ timeout: 15_000 });
 });
 
-test('výsledok sa po čase sám vráti na úvod', async ({ page }) => {
+test('prehra sa po čase sama vráti na úvod, dotyk ju nezdrží', async ({ page }) => {
+  await withConfig(page, { rounds: 1, resultTimeoutMs: 4_000 });
+  await unlock(page);
+  await startGame(page);
+  await play(page, { to: 0.5 });
+  await expect(page.locator('[data-t="result"]')).toContainText(COPY.result.lose, { timeout: 20_000 });
+  await page.locator('[data-t="result"]').click();
+  await expect(page.locator('[data-t="attract"]')).toBeVisible({ timeout: 6_000 });
+});
+
+test('výhra ostane 30 sekúnd, potom sa vráti na úvod', async ({ page }) => {
+  test.setTimeout(90_000);
   await withConfig(page, { rounds: 1, resultTimeoutMs: 4_000 });
   await unlock(page);
   await startGame(page);
   await play(page, { wobble: 0 });
-  await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
-  await expect(page.locator('[data-t="attract"]')).toBeVisible({ timeout: 12_000 });
+  const res = page.locator('[data-t="result"]');
+  await expect(res).toContainText(COPY.result.win, { timeout: 20_000 });
+  await expect(res).toContainText(COPY.result.winBody);
+  await page.waitForTimeout(20_000);
+  await expect(res).toBeVisible();
+  await expect(page.locator('[data-t="attract"]')).toBeVisible({ timeout: 15_000 });
 });

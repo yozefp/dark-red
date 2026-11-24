@@ -32,10 +32,12 @@ export function createPushGame(): GameModule {
   const self: GameModule = {
     id: 'push',
     label: 'PUSH THE INTENSITY',
+    // klientka 24. 11.: stačí jeden úspešný pokus z troch, všetky rovnako rýchle
+    attempts: true,
 
     mount(root, rc) {
       round = rc;
-      cfg = configFor(rc.difficulty, rc.round);
+      cfg = configFor(rc.difficulty, 1);
       if (rc.overrides?.band) cfg = { ...cfg, band: rc.overrides.band };
 
       shell = createShell(root);

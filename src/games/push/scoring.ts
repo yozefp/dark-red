@@ -22,6 +22,9 @@ export const BAND = 2;
  * meter v pásme na štandarde 0,31 s, 0,22 s a 0,16 s. Pri pôvodných
  * rýchlostiach (25/34/48) by to bolo 0,16/0,12/0,08 s — prstom netrafiteľné.
  * Nesmie klesnúť pod RATE_START, inak by meter spomaľoval.
+ *
+ * Od 24. 11. sú kolá PUSH pokusy rovnakou rýchlosťou — hra berie len prvú
+ * hodnotu (`configFor(…, 1)` v index.ts). Ďalšie ostávajú pre panel a testy.
  */
 export const DIFFICULTY: Record<string, number[]> = {
   easy:     [12, 16, 21],

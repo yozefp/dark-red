@@ -21,14 +21,9 @@ export function startIdleWatch() {
 function schedule() {
   if (timer !== null) clearTimeout(timer);
   if (state.state === 'attract') return;          // na úvodnej niet čoho sa vracať
-  const ms = state.state === 'result'
-    ? state.config.resultTimeoutMs
-    : state.config.idleTimeoutMs;
-  timer = window.setTimeout(() => go('attract'), ms);
-}
-
-/** Výsledková obrazovka sa vracia aj bez dotyku. */
-export function scheduleReturn(ms: number) {
-  if (timer !== null) clearTimeout(timer);
+  // výsledkovka sa vracia sama (Result.vue) — výhra po 30 s, prehra po 15 s;
+  // dotyk na nej ten čas nesmie skrátiť ani predĺžiť
+  if (state.state === 'result') return;
+  const ms = state.config.idleTimeoutMs;
   timer = window.setTimeout(() => go('attract'), ms);
 }

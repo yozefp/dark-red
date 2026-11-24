@@ -84,9 +84,6 @@ html,body{
 .center{display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;gap:4px}
 
-/* ── pruh odpočtu na výsledkovke ── */
-.timebar{position:absolute;left:0;bottom:0;height:2px;background:var(--amber);
-  transition:width linear}
 
 /* ── bodky ── */
 .dots{display:flex;gap:7px;justify-content:center;margin-top:8px}

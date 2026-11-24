@@ -65,11 +65,13 @@ export function setConfig(c: Config) { s.config = c; }
 
 export function addRound(r: RoundResult) { s.rounds.push(r); }
 
-export function finish(): GameSummary {
+/** `any` = stačí jeden úspešný pokus (GameModule.attempts), inak treba všetky kolá. */
+export function finish(rule: 'all' | 'any' = 'all'): GameSummary {
+  const ok = (r: RoundResult) => r.passed;
   const summary: GameSummary = {
     gameId: s.config.game,
     rounds: [...s.rounds],
-    passed: s.rounds.length > 0 && s.rounds.every((r) => r.passed),
+    passed: s.rounds.length > 0 && (rule === 'any' ? s.rounds.some(ok) : s.rounds.every(ok)),
   };
   s.summary = summary;
   return summary;
