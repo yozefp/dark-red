@@ -48,7 +48,8 @@ export const COPY = {
     },
     push: {
       headline: 'Dotiahni to na 110 %',
-      rule: 'Podrž prst, kým nedosiahneš 110 %. Trafíš to trikrát za sebou?',
+      // od 25. 11. tri pokusy, stačí jeden (attempts v push/index.ts)
+      rule: 'Podrž prst, kým nedosiahneš 110 %. Máš tri pokusy.',
       cta: 'Spustiť hru',
       status: 'TVOJ DRIVE',
       /** pred stlačením */
@@ -106,8 +107,8 @@ export const COPY = {
     // Appka ani nestráži počet pokusov, takže nesľubuje „jeden denne".
     win: 'Yes! Máš to.',
     lose: 'Tentokrát ti to nevyšlo.',
-    winBody: 'Ukáž svoje skóre obsluhe',
-    // klientka 24. 11.: pri prehre len „nevyšlo to“, žiadna výzva na ďalší pokus
+    // klientka 25. 11.: výsledok obsluhu nespomína — len výhra/prehra a skóre
+    winBody: '',
     loseBody: '',
   },
 

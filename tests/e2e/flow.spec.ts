@@ -53,7 +53,7 @@ test('celý priebeh: pohľad → kód → tutoriál → hra → výsledok', asyn
 
   expect(await play(page, { wobble: 0 })).toBeGreaterThan(0.85);
   await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
-  await expect(page.locator('[data-t="result"]')).toContainText(/obsluhe/i);
+  await expect(page.locator('[data-t="result"]')).toContainText(COPY.result.win);
 });
 
 test('tri kolá za sebou vedú k výsledku', async ({ page }) => {
@@ -122,7 +122,7 @@ test('výhra ostane 30 sekúnd, potom sa vráti na úvod', async ({ page }) => {
   await play(page, { wobble: 0 });
   const res = page.locator('[data-t="result"]');
   await expect(res).toContainText(COPY.result.win, { timeout: 20_000 });
-  await expect(res).toContainText(COPY.result.winBody);
+  await expect(res).not.toContainText(/obsluh/i);
   await page.waitForTimeout(20_000);
   await expect(res).toBeVisible();
   await expect(page.locator('[data-t="attract"]')).toBeVisible({ timeout: 15_000 });

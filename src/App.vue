@@ -79,7 +79,7 @@ function startGame() {
   go('playing');
 }
 
-/** Výhra ostane dlhšie, aby ju hráč stihol ukázať obsluhe (klientka 24. 11.). */
+/** Výhra ostane dlhšie ako prehra (klientka 24. 11.). */
 const WIN_TIMEOUT_MS = 30_000;
 
 function onRoundEnd(r: RoundResult) {

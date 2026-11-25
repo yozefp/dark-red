@@ -40,7 +40,7 @@ test.describe('PUSH', () => {
     await page.mouse.up();
 
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
-    await expect(page.locator('[data-t="result"]')).toContainText('obsluhe');
+    await expect(page.locator('[data-t="result"]')).toContainText(COPY.result.win);
   });
 
   test('pustenie pred stovkou neprejde', async ({ page }) => {
@@ -141,7 +141,7 @@ test.describe('MEMORIZE', () => {
     expect(await jas()).toBeLessThan(hned * 0.6);
 
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
-    await expect(page.locator('[data-t="result"]')).toContainText('obsluhe');
+    await expect(page.locator('[data-t="result"]')).toContainText(COPY.result.win);
   });
 
   test('zlé poradie kolo ukončí', async ({ page }) => {
@@ -204,7 +204,7 @@ test.describe('RELEASE', () => {
     await play(page, 'release');
     await throwAt(page);
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
-    await expect(page.locator('[data-t="result"]')).toContainText('obsluhe');
+    await expect(page.locator('[data-t="result"]')).toContainText(COPY.result.win);
     await expect(page.locator('[data-t="result"]')).toContainText(/MM OD STREDU/i);
   });
 
@@ -224,6 +224,6 @@ test.describe('RELEASE', () => {
     await page.waitForTimeout(600);
     await throwAt(page);
     await expect(page.locator('[data-t="result"]')).toBeVisible({ timeout: 20_000 });
-    await expect(page.locator('[data-t="result"]')).toContainText('obsluhe');
+    await expect(page.locator('[data-t="result"]')).toContainText(COPY.result.win);
   });
 });
